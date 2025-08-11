@@ -59,7 +59,7 @@ export default function UserPage() {
 
   const [filterName, setFilterName] = useState('');
 
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const [formName, setFormName] = useState('');
   const [formEmail, setFormEmail] = useState('');

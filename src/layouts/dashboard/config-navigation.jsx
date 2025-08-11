@@ -32,6 +32,11 @@ const navConfig = [
     path: '/testimonials',
     icon: icon('ic_cart'),
   },
+  {
+    title: 'subscriptions',
+    path: '/subscriptions',
+    icon: <SvgColor src={'/assets/icons/glass/ic_glass_message.png'} sx={{ width: 1, height: 1 }} />,
+  },
   // {
   //   title: 'login',
   //   path: '/login',
