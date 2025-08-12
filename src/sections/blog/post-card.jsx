@@ -32,7 +32,7 @@ const style = {
   p: 4,
 };
 
-export default function PostCard({ post, index, onEdit }) {
+export default function PostCard({ post, index, onEdit, onDelete }) {
   const latestPostLarge = index === 0;
 
   const latestPost = index === 1 || index === 2;
@@ -63,6 +63,9 @@ export default function PostCard({ post, index, onEdit }) {
       );
       console.log(response);
       handleCloseDeleteModal();
+      if (onDelete) {
+        onDelete(selectedID);
+      }
     } catch (error) {
       console.error("Error deleting:", error);
     }
@@ -318,4 +321,6 @@ export default function PostCard({ post, index, onEdit }) {
 PostCard.propTypes = {
   post: PropTypes.object.isRequired,
   index: PropTypes.number,
+  onEdit: PropTypes.func,
+  onDelete: PropTypes.func,
 };

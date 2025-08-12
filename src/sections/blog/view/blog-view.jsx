@@ -12,6 +12,8 @@ import TextField from "@mui/material/TextField";
 import Iconify from "src/components/iconify";
 import Snackbar from "@mui/material/Snackbar";
 import { Alert } from "@mui/material";
+import Backdrop from "@mui/material/Backdrop";
+import CircularProgress from "@mui/material/CircularProgress";
 import React from "react";
 import PostCard from "../post-card";
 import axiosInstance from "src/api/axiosInstance";
@@ -23,6 +25,8 @@ export default function BlogView() {
   const [heading, setHeading] = useState("");
   const [category, setCategory] = useState("");
   const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [snackBarOpen, setSnackBarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -45,6 +49,7 @@ export default function BlogView() {
     setHeading("");
     setCategory("");
     setImage(null);
+    setImagePreview(null);
     setEditingBlog(null); // Reset editing state
   };
 
@@ -62,8 +67,25 @@ export default function BlogView() {
   };
 
   const handleImageChange = (event) => {
-    setImage(event.target.files[0]);
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    // Blogs: only images allowed
+    if (!file.type.startsWith('image/')) {
+      setSeverity('error');
+      setSnackbarMessage('Only image files are allowed for blogs.');
+      setSnackBarOpen(true);
+      return;
+    }
+    setImage(file);
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
   };
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
 
   const handleSnackBarClose = (event, reason) => {
     setSnackBarOpen(false);
@@ -74,12 +96,28 @@ export default function BlogView() {
     setHeading(blog.heading); // Set form values
     setCategory(blog.category);
     setDescription(blog.description);
+    // Show existing image in preview if available
+    setImage(null);
+    setImagePreview(blog.image || blog.imageUrl || null);
     setOpen(true); // Open the modal
   };
 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!heading.trim() || !category.trim() || !description.trim()) {
+      setSeverity("error");
+      setSnackbarMessage("Heading, Category, and Description are required.");
+      setSnackBarOpen(true);
+      return;
+    }
+
+    if (!user || !user.id || !token) {
+      setSeverity("error");
+      setSnackbarMessage("You must be logged in to create or update a blog.");
+      setSnackBarOpen(true);
+      return;
+    }
 
     const formData = new FormData();
     formData.append("description", description);
@@ -90,6 +128,7 @@ export default function BlogView() {
     }
     formData.append("userId", user.id);
 
+    setIsSubmitting(true);
     try {
       if (editingBlog) {
         const response = await axiosInstance.put(`/blogs/updateBlog/${editingBlog.id}`, formData, {
@@ -103,10 +142,7 @@ export default function BlogView() {
           setSeverity("success");
           setSnackbarMessage("Blog updated successfully!");
           setSnackBarOpen(true);
-          // Update the blogs array with the updated blog data
-          setBlogs((prev) =>
-            prev.map((blog) => (blog.id === editingBlog.id ? response.data.blog : blog))
-          );
+          setBlogs((prev) => prev.map((blog) => (blog.id === editingBlog.id ? response.data.blog : blog)));
         }
       } else {
         const response = await axiosInstance.post("/blogs/createBlog", formData, {
@@ -115,7 +151,6 @@ export default function BlogView() {
             Authorization: `Bearer ${token}`,
           },
         });
-
         if (response.status === 201) {
           handleClose();
           setSeverity("success");
@@ -130,6 +165,8 @@ export default function BlogView() {
       setSeverity("error");
       setSnackbarMessage("Error submitting blog. Please try again.");
       setSnackBarOpen(true);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -175,63 +212,109 @@ export default function BlogView() {
           aria-describedby="modal-modal-description"
         >
           <Box sx={style} borderRadius={3}>
-            <Stack spacing={2} mt={2} width={800}>
-              <TextField
-                label="Heading"
-                variant="outlined"
-                value={heading}
-                onChange={handleHeadingChange}
-              />
-              <TextField
-                label="Category"
-                variant="outlined"
-                value={category}
-                onChange={handleCategoryChange}
-              />
-              {/* <TextField
-                label="Description"
-                variant="outlined"
-                multiline
-                rows={5}
-                value={description}
-                onChange={handleDescriptionChange}
-              /> */}
-              <div className="mb-[100px] h-[300px]">
-                <h3>Description</h3>
-                <ReactQuill
-                  theme="snow"
-                  value={description}
-                  onChange={setDescription}
+            <Backdrop open={isSubmitting} sx={{ zIndex: (theme) => theme.zIndex.modal + 1, color: '#fff' }}>
+              <CircularProgress color="inherit" />
+            </Backdrop>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              {editingBlog ? "Edit Blog" : "Add Blog"}
+            </Typography>
+            <Box component="form" onSubmit={handleSubmit} noValidate>
+              <Stack spacing={2} mt={2} width={800}>
+                <TextField
+                  label="Heading"
+                  variant="outlined"
+                  value={heading}
+                  onChange={handleHeadingChange}
+                  required
                 />
-              </div>
-
-              {/* {image && <img src={URL.createObjectURL(image)} style={{ height: '100px', width: '200px' }} />} */}
-
-              <Button
-                variant="contained"
-                component="label"
-                color="inherit"
-                sx={{ width: "150px", alignSelf: "center" }}
-              >
-                Upload Image
-                <input type="file" hidden onChange={handleImageChange} />
-              </Button>
-              <Button
-                variant="contained"
-                color="inherit"
-                sx={{ width: "150px", alignSelf: "center" }}
-                onClick={handleSubmit}
-              >
-                Save
-              </Button>
-            </Stack>
+                <TextField
+                  label="Category"
+                  variant="outlined"
+                  value={category}
+                  onChange={handleCategoryChange}
+                  required
+                />
+                <div className="mb-[100px] h-[300px]">
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>Description</Typography>
+                  <ReactQuill
+                    theme="snow"
+                    value={description}
+                    onChange={setDescription}
+                  />
+                </div>
+                <Stack spacing={2}>
+                  {imagePreview && (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                        p: 1,
+                        border: '1px dashed',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        bgcolor: 'background.default',
+                      }}
+                    >
+                      <Box
+                        component="img"
+                        src={imagePreview}
+                        alt="Selected preview"
+                        sx={{
+                          height: 120,
+                          width: 160,
+                          objectFit: 'cover',
+                          borderRadius: 1,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                        }}
+                      />
+                      <Stack spacing={1}>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{image?.name}</Typography>
+                      </Stack>
+                    </Box>
+                  )}
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Button
+                      variant="contained"
+                      component="label"
+                      color="inherit"
+                      disabled={isSubmitting}
+                    >
+                      Upload Image
+                      <input key={imagePreview || 'no-preview'} type="file" accept="image/*" hidden onChange={handleImageChange} />
+                    </Button>
+                    {image && <Button variant="text" color="error" disabled={isSubmitting} onClick={() => { setImage(null); setImagePreview(null); }}>Remove</Button>}
+                  </Stack>
+                </Stack>
+                <Stack direction="row" spacing={2} justifyContent="flex-end">
+                  <Button variant="outlined" color="inherit" onClick={handleClose} disabled={isSubmitting}>
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    type="submit"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Saving…' : 'Save'}
+                  </Button>
+                </Stack>
+              </Stack>
+            </Box>
           </Box>
         </Modal>
       </Stack>
 
       <Grid container spacing={3}>
         {blogs.map((post, index) => (
-          <PostCard key={post.id} post={post} index={index} onEdit={handleEdit} />
+          <PostCard
+            key={post.id}
+            post={post}
+            index={index}
+            onEdit={handleEdit}
+            onDelete={(id) => setBlogs((prev) => prev.filter((b) => b.id !== id))}
+          />
         ))}
       </Grid>
       <Snackbar

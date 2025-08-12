@@ -10,10 +10,14 @@ import Container from '@mui/material/Container';
 import Grid from '@mui/material/Unstable_Grid2';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Snackbar from '@mui/material/Snackbar';
 import { Alert } from '@mui/material';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import { posts } from 'src/_mock/blog';
 import axiosInstance from 'src/api/axiosInstance';
@@ -30,6 +34,9 @@ export default function TestimonialView() {
   const [name, setName] = useState('');
   const [image, setImage] = useState(null);
   const [location, setLocation] = useState('');
+  const [editingTestimonial, setEditingTestimonial] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [snackBarOpen, setSnackBarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -55,11 +62,37 @@ export default function TestimonialView() {
   };
 
   const handleImageChange = (event) => {
-    setImage(event.target.files[0]);
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('video/')) {
+      setSeverity('error');
+      setSnackbarMessage('Only video files are allowed for testimonials.');
+      setSnackBarOpen(true);
+      return;
+    }
+    setImage(file);
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
   };
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
 
   const handleSnackBarClose = (event, reason) => {
     setSnackBarOpen(false);
+  };
+
+  const handleEdit = (testimonial) => {
+    setEditingTestimonial(testimonial);
+    setName(testimonial.name || '');
+    setDescription(testimonial.description || '');
+    setLocation(testimonial.location || '');
+    setImage(null);
+    setImagePreview(testimonial.video_link || testimonial.video || testimonial.videoUrl || testimonial.mediaUrl || null);
+    setOpen(true);
   };
 
 
@@ -75,28 +108,50 @@ export default function TestimonialView() {
     }
 
     try {
-      // Send form data to the backend API
-      const response = await axiosInstance.post('/testimonial/add-testimonial', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      setIsSubmitting(true);
+      if (editingTestimonial) {
+        // Update existing testimonial (backend commonly expects POST for multipart updates)
+        const response = await axiosInstance.put(`/testimonial/updateTestimonial/${editingTestimonial.id}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      if (response.status === 201) {
-        handleClose();
-        setSeverity('success');
-        setSnackbarMessage('Testimonial added successfully!');
-        setSnackBarOpen(true);
-        const newTestimonial = response.data.testimonial;
-        setTestimonials((prev) => [...prev, newTestimonial]);
+        if (response.status === 200) {
+          handleClose();
+          setSeverity('success');
+          setSnackbarMessage('Testimonial updated successfully!');
+          setSnackBarOpen(true);
+          const updated = response.data.testimonial || response.data.data || response.data;
+          setTestimonials((prev) => prev.map((t) => (t.id === editingTestimonial.id ? updated : t)));
+          setEditingTestimonial(null);
+        }
+      } else {
+        // Create new testimonial
+        const response = await axiosInstance.post('/testimonial/add-testimonial', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
+        if (response.status === 201) {
+          handleClose();
+          setSeverity('success');
+          setSnackbarMessage('Testimonial added successfully!');
+          setSnackBarOpen(true);
+          const newTestimonial = response.data.testimonial;
+          setTestimonials((prev) => [...prev, newTestimonial]);
+        }
       }
     } catch (error) {
       console.error('Error adding Testimonial:', error);
       setSeverity('error');
-      setSnackbarMessage('Error adding Testimonial. Please try again.');
+      setSnackbarMessage('Error saving Testimonial. Please try again.');
       setSnackBarOpen(true);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -135,44 +190,70 @@ export default function TestimonialView() {
           aria-describedby="modal-modal-description"
         >
           <Box sx={style} borderRadius={3}>
-            <Stack spacing={2} mt={2} width={800}>
-              <TextField id="outlined-basic" label="Heading" variant="outlined" />
+            <Backdrop open={isSubmitting} sx={{ zIndex: (theme) => theme.zIndex.modal + 1, color: '#fff' }}>
+              <CircularProgress color="inherit" />
+            </Backdrop>
+            <Box component="form" onSubmit={handleSubmit} noValidate>
+              <Stack spacing={2} mt={2} width={800}>
+              
               <TextField
                 label="Name"
                 variant="outlined"
                 value={name}
                 onChange={handleNameChange}
               />
-              <TextField
-                label="Description"
-                variant="outlined"
-                value={description}
-                onChange={handleDescriptionChange}
-              />
+              <div>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>Description</Typography>
+                <ReactQuill theme="snow" value={description} onChange={setDescription} />
+              </div>
               <TextField
                 label="Location"
                 variant="outlined"
                 value={location}
                 onChange={handleLocationChange}
               />
-              <Button
-                variant="contained"
-                component="label"
-                color="inherit"
-                sx={{ width: '150px', alignSelf: 'center' }}
-              >
-                Upload Image
-                <input type="file" hidden onChange={handleImageChange} />
-              </Button>
-              <Button
-                variant="contained"
-                color="inherit"
-                sx={{ width: '150px', alignSelf: 'center' }}
-                onClick={handleSubmit}
-              >
-                Save
-              </Button>
-            </Stack>
+              {imagePreview && (
+                <Box sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  p: 1,
+                  border: '1px dashed',
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  bgcolor: 'background.default',
+                }}>
+                  <video width="320" height="180" controls style={{ borderRadius: 6, border: '1px solid', borderColor: 'divider' }}>
+                    <source src={imagePreview} type={image?.type || 'video/mp4'} />
+                    Your browser does not support the video tag.
+                  </video>
+                </Box>
+              )}
+                <Stack direction="row" spacing={2} alignItems="center" justifyContent="flex-start">
+                <Button
+                  variant="contained"
+                  component="label"
+                  color="inherit"
+                >
+                  Upload Video
+                  <input type="file" accept="video/*" hidden onChange={handleImageChange} />
+                </Button>
+                {imagePreview && (
+                  <Button variant="text" color="error" onClick={() => { setImage(null); setImagePreview(null); }}>
+                    Remove
+                  </Button>
+                )}
+              </Stack>
+                <Stack direction="row" spacing={2} justifyContent="flex-end">
+                  <Button variant="outlined" color="inherit" onClick={handleClose}>
+                    Cancel
+                  </Button>
+                  <Button variant="contained" color="primary" type="submit">
+                    Save
+                  </Button>
+                </Stack>
+              </Stack>
+            </Box>
           </Box>
         </Modal>
       </Stack>
@@ -181,7 +262,7 @@ export default function TestimonialView() {
 
       <Grid container spacing={3}>
         {testimonials.map((post, index) => (
-          <PostCard key={post.id} post={post} index={index} />
+          <PostCard key={post.id} post={post} index={index} onEdit={handleEdit} />
         ))}
       </Grid>
     </Container>

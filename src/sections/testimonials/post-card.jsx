@@ -37,7 +37,7 @@ const style = {
 
 // ----------------------------------------------------------------------
 
-export default function PostCard({ post, index }) {
+export default function PostCard({ post, index, onEdit }) {
   const { name, createdAt } = post;
 
   const latestPostLarge = index === 0;
@@ -96,9 +96,16 @@ export default function PostCard({ post, index }) {
       >
         {name}
       </Link>
-      <IconButton size="small" color="error" onClick={() => handleOpenDeleteModal(post.id)}>
-        <Iconify icon="eva:trash-2-outline" />
-      </IconButton>
+      <Stack direction="row" spacing={1} alignItems="center">
+        {onEdit && (
+          <IconButton size="small" color="primary" onClick={() => onEdit(post)}>
+            <Iconify icon="eva:edit-2-outline" />
+          </IconButton>
+        )}
+        <IconButton size="small" color="error" onClick={() => handleOpenDeleteModal(post.id)}>
+          <Iconify icon="eva:trash-2-outline" />
+        </IconButton>
+      </Stack>
     </Stack>
   );
 
@@ -135,18 +142,32 @@ export default function PostCard({ post, index }) {
     </Stack>
   );
 
+  const videoSrc = post.video_link || post.video || post.videoUrl || post.mediaUrl;
+  const imageSrc = post.image || post.imageUrl || 'assets/images/covers/cover_5.jpg';
+
   const renderCover = (
-    <Box
-      component="img"
-      src='https://www.freepik.com/free-photos-vectors/white'
-      sx={{
-        top: 0,
-        width: 1,
-        height: 1,
-        objectFit: 'cover',
-        position: 'absolute',
-      }}
-    />
+    <>
+      {videoSrc ? (
+        <Box sx={{ top: 0, width: 1, height: 1, position: 'absolute' }}>
+          <video style={{ width: '100%', height: '100%', objectFit: 'cover' }} controls>
+            <source src={videoSrc} />
+            Your browser does not support the video tag.
+          </video>
+        </Box>
+      ) : (
+        <Box
+          component="img"
+          src={imageSrc}
+          sx={{
+            top: 0,
+            width: 1,
+            height: 1,
+            objectFit: 'cover',
+            position: 'absolute',
+          }}
+        />
+      )}
+    </>
   );
 
   const renderDate = (
@@ -273,4 +294,5 @@ export default function PostCard({ post, index }) {
 PostCard.propTypes = {
   post: PropTypes.object.isRequired,
   index: PropTypes.number,
+  onEdit: PropTypes.func,
 };
