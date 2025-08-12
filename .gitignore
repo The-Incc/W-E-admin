@@ -5,7 +5,6 @@ node_modules/
 .cursor/
 
 # Build output
-/dist/
 /build/
 
 # Logs
