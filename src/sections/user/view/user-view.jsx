@@ -33,6 +33,37 @@ import { useContext } from 'react';
 import AuthContext from 'src/context/AuthContext';
 // ----------------------------------------------------------------------
 
+function convertToCsvValue(value) {
+  const stringValue = value === undefined || value === null ? '' : String(value);
+  if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+    return '"' + stringValue.replace(/"/g, '""') + '"';
+  }
+  return stringValue;
+}
+
+function exportUsersToCSV(users) {
+  const headers = ['ID', 'Full Name', 'Email', 'Phone', 'Role', 'Status'];
+  const rows = users.map((u) => [
+    convertToCsvValue(u.id),
+    convertToCsvValue(u.fullName),
+    convertToCsvValue(u.email),
+    convertToCsvValue(u.phone),
+    convertToCsvValue(u.role),
+    convertToCsvValue(u.status),
+  ]);
+
+  const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', 'users.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 export default function UserPage() {
   const [open, setOpen] = useState(false);
   const { token } = useContext(AuthContext); // Access login method from AuthContext
@@ -252,10 +283,14 @@ export default function UserPage() {
     <Container>
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
         <Typography variant="h4">Users</Typography>
-
-        <Button variant="contained" color="inherit" onClick={handleOpenModal} startIcon={<Iconify icon="eva:plus-fill" />}>
-          New User
-        </Button>
+        <Stack direction="row" spacing={2}>
+          <Button variant="outlined" color="primary" onClick={() => exportUsersToCSV(users)}>
+            Export CSV
+          </Button>
+          <Button variant="contained" color="inherit" onClick={handleOpenModal} startIcon={<Iconify icon="eva:plus-fill" />}>
+            New User
+          </Button>
+        </Stack>
       </Stack>
 
       <Card>
@@ -296,6 +331,7 @@ export default function UserPage() {
                         key={row?.id}
                         id={row?.id}
                         name={row?.fullName}
+                        company={row?.email}
                         role={row?.role}
                         status={row?.status}
 

@@ -46,12 +46,18 @@ export function applyFilter({ inputData, comparator, filterName }) {
 
   inputData = stabilizedThis.map((el) => el[0]);
 
-  if (inputData) {
-    if (filterName) {
-      inputData = inputData.filter(
-        (user) => user.name.toLowerCase().indexOf(filterName.toLowerCase()) !== -1
+  if (inputData && filterName) {
+    const normalizedFilter = filterName.toLowerCase();
+    inputData = inputData.filter((user) => {
+      const fullName = (user.fullName || '').toLowerCase();
+      const email = (user.email || '').toLowerCase();
+      const name = (user.name || '').toLowerCase();
+      return (
+        fullName.includes(normalizedFilter) ||
+        email.includes(normalizedFilter) ||
+        name.includes(normalizedFilter)
       );
-    }
+    });
   }
 
   return inputData;

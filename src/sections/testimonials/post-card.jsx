@@ -17,6 +17,7 @@ import { fShortenNumber } from 'src/utils/format-number';
 
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
 
 import Iconify from 'src/components/iconify';
 import SvgColor from 'src/components/svg-color';
@@ -45,6 +46,7 @@ export default function PostCard({ post, index }) {
 
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [selectedID, setSelectedID] = useState(null);
+  const [isDeleted, setIsDeleted] = useState(false);
 
   const handleCloseDeleteModal = () => {
     setOpenDeleteModal(false)
@@ -66,7 +68,8 @@ export default function PostCard({ post, index }) {
         }
       });
       console.log(response);
-      handleCloseDeleteModal()
+      handleCloseDeleteModal();
+      setIsDeleted(true);
     } catch (error) {
       console.error('Error deleting:', error);
     }
@@ -74,7 +77,7 @@ export default function PostCard({ post, index }) {
 
 
   const renderTitle = (
-    <>
+    <Stack direction="row" alignItems="center" justifyContent="space-between">
       <Link
         color="inherit"
         variant="subtitle2"
@@ -93,9 +96,10 @@ export default function PostCard({ post, index }) {
       >
         {name}
       </Link>
-      <button onClick={() => handleOpenDeleteModal(post.id)}>Delete</button>
-    </>
-
+      <IconButton size="small" color="error" onClick={() => handleOpenDeleteModal(post.id)}>
+        <Iconify icon="eva:trash-2-outline" />
+      </IconButton>
+    </Stack>
   );
 
   const renderInfo = (
@@ -177,6 +181,8 @@ export default function PostCard({ post, index }) {
       }}
     />
   );
+
+  if (isDeleted) return null;
 
   return (
     <>
