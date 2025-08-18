@@ -16,6 +16,8 @@ import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import Snackbar from '@mui/material/Snackbar';
 import { Alert } from '@mui/material';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 
 // import { users } from 'src/_mock/user';
 
@@ -75,6 +77,7 @@ export default function UserPage() {
   const [page, setPage] = useState(0);
 
   const [openModal, setOpenModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
 
   const [users, setUsers] = useState([]);
 
@@ -92,22 +95,28 @@ export default function UserPage() {
 
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const [formName, setFormName] = useState('');
+  const [formFullName, setFormFullName] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formPassword, setFormPassword] = useState('');
+  const [formRole, setFormRole] = useState('customer');
+  const [formGender, setFormGender] = useState('male');
+  const [formState, setFormState] = useState('');
+  const [formZipcode, setFormZipcode] = useState('');
   const [formFile, setFormFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
-  const [nameError, setNameError] = useState('');
+  const [fullNameError, setFullNameError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-
+  const [stateError, setStateError] = useState('');
+  const [zipcodeError, setZipcodeError] = useState('');
 
   const [snackBarOpen, setSnackBarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [severity, setSeverity] = useState('success'); // 'success', 'error', etc.
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -127,14 +136,16 @@ export default function UserPage() {
     let valid = true;
 
     // Reset previous error messages
-    setNameError('');
+    setFullNameError('');
     setEmailError('');
     setPhoneError('');
     setPasswordError('');
+    setStateError('');
+    setZipcodeError('');
 
-    // Name validation
-    if (!formName.trim()) {
-      setNameError('Name is required');
+    // Full Name validation
+    if (!formFullName.trim() || formFullName.length > 100) {
+      setFullNameError('Full name is required (max 100 chars)');
       valid = false;
     }
 
@@ -148,28 +159,39 @@ export default function UserPage() {
       valid = false;
     }
 
-    // Phone validation
-    const phoneRegex = /^[0-9]{10}$/; // Adjust this regex as needed for your phone format
+    // Phone validation 10–15 digits
+    const phoneRegex = /^[0-9]{10,15}$/;
     if (!formPhone) {
       setPhoneError('Phone number is required');
       valid = false;
     } else if (!phoneRegex.test(formPhone)) {
-      setPhoneError('Invalid phone number format (e.g., 1234567890)');
+      setPhoneError('Phone must be 10–15 digits');
       valid = false;
     }
 
     // Password validation
-    if (!formPassword) {
-      setPasswordError('Password is required');
+    if (!editingUser) {
+      const complexity = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+      if (!formPassword) {
+        setPasswordError('Password is required');
+        valid = false;
+      } else if (!complexity.test(formPassword)) {
+        setPasswordError('Password must be 8+ chars with upper, lower, number, special');
+        valid = false;
+      }
+    }
+
+    if (!formState.trim()) {
+      setStateError('State is required');
       valid = false;
-    } else if (formPassword.length < 6) {
-      setPasswordError('Password should be at least 6 characters long');
+    }
+    if (!formZipcode.trim()) {
+      setZipcodeError('Zipcode is required');
       valid = false;
     }
 
     return valid;
   };
-
 
   const handleSort = (event, id) => {
     const isAsc = orderBy === id && order === 'asc';
@@ -179,11 +201,9 @@ export default function UserPage() {
     }
   };
 
-
   const handleSnackBarClose = (event, reason) => {
     setSnackBarOpen(false);
   };
-
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
@@ -195,6 +215,32 @@ export default function UserPage() {
   };
 
   const handleOpenModal = () => {
+    setEditingUser(null);
+    setFormFullName('');
+    setFormEmail('');
+    setFormPhone('');
+    setFormPassword('');
+    setFormRole('customer');
+    setFormGender('male');
+    setFormState('');
+    setFormZipcode('');
+    setFormFile(null);
+    setImagePreview(null);
+    setOpenModal(true);
+  };
+
+  const handleEditUser = (user) => {
+    setEditingUser(user);
+    setFormFullName(user.fullName || '');
+    setFormEmail(user.email || '');
+    setFormPhone(user.phone || '');
+    setFormPassword('');
+    setFormRole(user.role || 'customer');
+    setFormGender(user.gender || 'male');
+    setFormState(user.state || '');
+    setFormZipcode(user.zipcode || '');
+    setFormFile(null);
+    setImagePreview(user.profileImage || null);
     setOpenModal(true);
   };
 
@@ -243,39 +289,60 @@ export default function UserPage() {
 
     // Prepare form data
     const formData = new FormData();
-    formData.append('name', formName);
+    formData.append('fullName', formFullName);
     formData.append('email', formEmail);
     formData.append('phone', formPhone);
-    formData.append('password', formPassword);
-    formData.append('file', formFile); // Append the file
+    formData.append('role', formRole);
+    formData.append('gender', formGender);
+    formData.append('state', formState);
+    formData.append('zipcode', formZipcode);
+    if (!editingUser) {
+      formData.append('password', formPassword);
+    }
+    if (formFile) formData.append('file', formFile);
 
     try {
-      // Send form data to the backend API
-      const response = await axiosInstance.post('/user/createAdminUser', formData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data', // This is usually set automatically by Axios when using FormData
-        },
-      });
-
-      if (response.status === 201) {
-        handleCloseModal();
-        setSnackbarMessage('User added successfully!');
-        setSeverity('success');
-        setSnackBarOpen(true);
-        const newUser = response.data.user;
-        setUsers((prev) => [...prev, newUser]);
-
+      setIsSubmitting(true);
+      if (editingUser) {
+        const response = await axiosInstance.put(`/user/user/${editingUser.id}`, formData, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        if (response.status === 200) {
+          handleCloseModal();
+          setSnackbarMessage('User updated successfully!');
+          setSeverity('success');
+          setSnackBarOpen(true);
+          const updated = response.data.user || response.data;
+          setUsers((prev) => prev.map(u => (u.id === editingUser.id ? updated : u)));
+        }
+      } else {
+        const response = await axiosInstance.post('/user/createUser', formData, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data', // This is usually set automatically by Axios when using FormData
+          },
+        });
+        if (response.status === 201) {
+          handleCloseModal();
+          setSnackbarMessage('User added successfully!');
+          setSeverity('success');
+          setSnackBarOpen(true);
+          const newUser = response.data.user;
+          setUsers((prev) => [...prev, newUser]);
+        }
       }
     } catch (error) {
       console.error('Error adding user:', error);
-      setSnackbarMessage('Error adding user. Please try again.');
+      setSnackbarMessage(error?.response?.data?.message || 'Error adding user. Please try again.');
       setSeverity('error');
       setSnackBarOpen(true);
+    } finally { 
+      setIsSubmitting(false); 
     }
   };
-
-
 
   const notFound = !dataFiltered.length && !!filterName;
 
@@ -334,11 +401,12 @@ export default function UserPage() {
                         company={row?.email}
                         role={row?.role}
                         status={row?.status}
-
                         avatarUrl={row.profileImage && row.profileImage}
                         isVerified={row?.phone}
                         selected={selected.indexOf(row?.fullName) !== -1}
                         handleClick={(event) => handleClick(event, row?.fullName)}
+                        onEdit={handleEditUser}
+                        onDeleted={(deletedId)=> setUsers(prev => prev.filter(u => u.id !== deletedId))}
                       />
                     )
                   })}
@@ -388,15 +456,15 @@ export default function UserPage() {
       >
         <Box sx={style} borderRadius={3}>
           <Stack spacing={2} mt={2} width={800}>
-            <Typography>Add New User</Typography>
+            <Typography>{editingUser ? 'Edit User' : 'Add New User'}</Typography>
             <TextField
-              id="name"
-              label="Name"
+              id="fullName"
+              label="Full Name"
               variant="outlined"
-              value={formName}
-              onChange={(e) => setFormName(e.target.value)}
-              error={!!nameError}
-              helperText={nameError}
+              value={formFullName}
+              onChange={(e) => setFormFullName(e.target.value)}
+              error={!!fullNameError}
+              helperText={fullNameError}
             />
             <TextField
               id="email"
@@ -420,6 +488,44 @@ export default function UserPage() {
               helperText={phoneError}
 
             />
+            <Stack direction="row" spacing={2}>
+              <TextField 
+                id="role" 
+                label="Role" 
+                variant="outlined" 
+                value={formRole} 
+                onChange={(e)=> setFormRole(e.target.value)} 
+                helperText="e.g., customer, admin, vendor" 
+              />
+              <TextField 
+                id="gender" 
+                label="Gender" 
+                variant="outlined" 
+                value={formGender} 
+                onChange={(e)=> setFormGender(e.target.value)} 
+                helperText="male, female, other" 
+              />
+            </Stack>
+            <Stack direction="row" spacing={2}>
+              <TextField 
+                id="state" 
+                label="State" 
+                variant="outlined" 
+                value={formState} 
+                onChange={(e)=> setFormState(e.target.value)} 
+                error={!!stateError} 
+                helperText={stateError} 
+              />
+              <TextField 
+                id="zipcode" 
+                label="Zipcode" 
+                variant="outlined" 
+                value={formZipcode} 
+                onChange={(e)=> setFormZipcode(e.target.value)} 
+                error={!!zipcodeError} 
+                helperText={zipcodeError} 
+              />
+            </Stack>
             <TextField
               id="password"
               label="Password"
@@ -429,170 +535,85 @@ export default function UserPage() {
               onChange={(e) => setFormPassword(e.target.value)}
               error={!!passwordError}
               helperText={passwordError}
-
+              disabled={!!editingUser}
             />
-            <Button
-              variant="contained"
-              component="label"
-              color="info"
-            >
-              Upload File
-              <input
-                type="file"
-                hidden
-                onChange={(e) => setFormFile(e.target.files[0])} // Capture the selected file
-              />
-            </Button>
+            {imagePreview && (
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                p: 1,
+                border: '1px dashed',
+                borderColor: 'divider',
+                borderRadius: 1,
+                bgcolor: 'background.default',
+              }}>
+                <Box
+                  component='img'
+                  src={imagePreview}
+                  alt='Preview'
+                  sx={{
+                    height: 120,
+                    width: 160,
+                    objectFit: 'cover',
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'divider'
+                  }}
+                />
+              </Box>
+            )}
+            <Stack direction='row' spacing={2} alignItems='center'>
+              <Button
+                variant="contained"
+                component="label"
+                color="info"
+              >
+                Upload Image
+                <input
+                  key={imagePreview || 'no-preview'}
+                  type="file"
+                  hidden
+                  accept='image/*'
+                  onChange={(e) => {
+                    const f = e.target.files && e.target.files[0];
+                    if (!f) return;
+                    if (!/image\/(jpeg|png)/.test(f.type) || f.size > 2 * 1024 * 1024) {
+                      setSnackbarMessage('Only JPG/PNG up to 2MB');
+                      setSeverity('error');
+                      setSnackBarOpen(true);
+                      return;
+                    }
+                    setFormFile(f);
+                    setImagePreview(URL.createObjectURL(f));
+                  }}
+                />
+              </Button>
+              {formFile && (
+                <Button
+                  variant='text'
+                  color='error'
+                  onClick={() => {
+                    setFormFile(null);
+                    setImagePreview(null);
+                  }}
+                >
+                  Remove
+                </Button>
+              )}
+            </Stack>
 
             <Button
               variant="contained"
               color="inherit"
               sx={{ width: '150px', alignSelf: 'center' }}
-              onClick={handleSubmit} // Handle form submission
+              onClick={handleSubmit}
+              disabled={isSubmitting}
             >
-              Save
+              {isSubmitting ? 'Saving...' : 'Save'}
             </Button>
           </Stack>
         </Box>
-        {/* <Box sx={style} borderRadius={3}> */}
-        {/* <Stack direction="row" alignItems="center" spacing={2}>
-            <Avatar alt={name} src={avatarUrl} style={{ height: 70, width: 70 }} />
-            <Typography
-              variant="subtitle2"
-              noWrap
-              style={{ marginRight: '8px', fontWeight: 600, fontSize: 20 }}
-            >
-              {name}
-            </Typography>
-          </Stack>
-          <Box mt={3}>
-            <span style={{ fontWeight: 600, fontSize: 18 }}>Personal Information:</span>
-          </Box>
-          <Box direction="row" spacing={4} sx={{ display: 'inline-flex', flexWrap: 'wrap' }}>
-            <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Email</span>
-              <p
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  display: 'inline-block',
-                }}
-              >
-                {company}
-              </p>
-            </Stack>
-            <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Phone Number</span>
-              <p
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  display: 'inline-block',
-                }}
-              >
-                {isVerified ? isVerified : 'N/A'}
-              </p>
-            </Stack>
-          </Box>
-          <Box mt={1}>
-            <span style={{ fontWeight: 600, fontSize: 18 }}>Calculator Results:</span>
-          </Box>{' '}
-          <Box direction="row" spacing={4} sx={{ display: 'inline-flex', flexWrap: 'wrap' }}>
-            <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Income Replacement</span>
-              <p
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  display: 'inline-block',
-                }}
-              >
-                $ {userData?.annualIncome}
-              </p>
-            </Stack>
-            <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Debt Elimination</span>
-              <p
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  display: 'inline-block',
-                }}
-              >
-                $ {userData?.eliminateDebt}
-              </p>
-            </Stack>{' '}
-            <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Childcare</span>
-              <p
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  display: 'inline-block',
-                }}
-              >
-                $ {userData?.childcare}
-              </p>
-            </Stack>{' '}
-            <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Extended Healthcare</span>
-              <p
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  display: 'inline-block',
-                }}
-              >
-                $ {userData?.extendedHealthcare}
-              </p>
-            </Stack>{' '}
-            <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Education Fund</span>
-              <p
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  display: 'inline-block',
-                }}
-              >
-                $300,000
-              </p>
-            </Stack>
-            <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Emergency Fund</span>
-              <p
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  display: 'inline-block',
-                }}
-              >
-                $ {userData?.emergencyFund}
-              </p>
-            </Stack>
-            <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Final Expenses </span>
-              <p
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  display: 'inline-block',
-                }}
-              >
-                $ {userData?.finalExpense}
-              </p>
-            </Stack> */}
-        {/* </Box>
-        </Box> */}
       </Modal>
       <Snackbar open={snackBarOpen} autoHideDuration={6000} onClose={handleSnackBarClose}>
         <Alert
@@ -604,6 +625,9 @@ export default function UserPage() {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+      <Backdrop open={isSubmitting} sx={{ zIndex: (t) => t.zIndex.modal + 1, color: '#fff' }}>
+        <CircularProgress color='inherit' />
+      </Backdrop>
     </Container>
   );
 }

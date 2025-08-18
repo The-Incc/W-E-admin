@@ -16,6 +16,7 @@ import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
+import Tooltip from '@mui/material/Tooltip';
 
 import Label from 'src/components/label';
 import Iconify from 'src/components/iconify';
@@ -46,6 +47,8 @@ export default function UserTableRow({
   isVerified,
   status,
   handleClick,
+  onEdit,
+  onDeleted,
 }) {
   const [openPopover, setOpenPopover] = useState(null);
   const [openModal, setOpenModal] = useState(false);
@@ -94,6 +97,7 @@ export default function UserTableRow({
       });
       console.log(response);
       handleCloseDeleteModal()
+      if (onDeleted) onDeleted(selectedID);
     } catch (error) {
       console.error('Error deleting:', error);
     }
@@ -143,14 +147,18 @@ export default function UserTableRow({
 
 
         <TableCell>
-          {/* <Button variant="contained" size='small' color="primary" onClick={handleOpenModal}>
-            Edit
-          </Button> */}
-          {/* <br></br> */}
-          {/* <br></br> */}
-          <Button variant="contained" size='small' color="error" onClick={() => handleOpenDeleteModal(id)}>
-            Delete
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Tooltip title="Edit User" arrow>
+              <IconButton size="small" color="primary" onClick={() => onEdit && onEdit({ id, fullName: name, email: company, phone: isVerified, role, status, avatarUrl })}>
+                <Iconify icon="eva:edit-2-outline" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Delete User" arrow>
+              <IconButton size="small" color="error" onClick={() => handleOpenDeleteModal(id)}>
+                <Iconify icon="eva:trash-2-outline" />
+              </IconButton>
+            </Tooltip>
+          </Stack>
         </TableCell>
 
         <TableCell align="right">

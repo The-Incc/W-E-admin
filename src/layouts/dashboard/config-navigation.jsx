@@ -17,6 +17,12 @@ const navConfig = [
     path: '/user',
     icon: icon('ic_user'),
   },
+  // Admin management (visible via role-based filter)
+  {
+    title: 'admins',
+    path: '/admins',
+    icon: icon('ic_user'),
+  },
   // {
   //   title: 'product',
   //   path: '/products',

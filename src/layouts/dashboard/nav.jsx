@@ -71,9 +71,27 @@ export default function Nav({ openNav, onCloseNav }) {
     </Box>
   );
 
+  const resolveRole = () => {
+    const roleFromContext = user?.role;
+    const roleFromStorage = loggedInUser?.role;
+    return (roleFromContext || roleFromStorage || '').toLowerCase();
+  };
+
+  const getNavForRole = (role) => {
+    // Admins see all items
+    if (role === 'admin' || role === 'superadmin' || role === 'administrator') {
+      return navConfig;
+    }
+    // Regular users: hide admin-only entries
+    const adminOnlyTitles = new Set(['user', 'subscriptions', 'admins']);
+    return navConfig.filter((item) => !adminOnlyTitles.has(item.title));
+  };
+
+  const menuItems = getNavForRole(resolveRole());
+
   const renderMenu = (
     <Stack component="nav" spacing={0.5} sx={{ px: 2 }}>
-      {navConfig.map((item) => (
+      {menuItems.map((item) => (
         <NavItem key={item.title} item={item} />
       ))}
     </Stack>

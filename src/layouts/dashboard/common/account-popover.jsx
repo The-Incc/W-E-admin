@@ -19,9 +19,10 @@ import axiosInstance from 'src/api/axiosInstance';
 
 const MENU_OPTIONS = [
   {
-    label: 'Home',
-    icon: 'eva:home-fill',
-  }
+    label: 'Profile',
+    icon: 'eva:settings-2-fill',
+    path: '/profile',
+  },
 ];
 
 // ----------------------------------------------------------------------
@@ -123,7 +124,13 @@ export default function AccountPopover() {
         <Divider sx={{ borderStyle: 'dashed' }} />
 
         {MENU_OPTIONS.map((option) => (
-          <MenuItem key={option.label} onClick={handleClose}>
+          <MenuItem
+            key={option.label}
+            onClick={() => {
+              handleClose();
+              if (option.path) navigate(option.path);
+            }}
+          >
             {option.label}
           </MenuItem>
         ))}
