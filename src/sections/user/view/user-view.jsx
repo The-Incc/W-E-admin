@@ -382,9 +382,7 @@ export default function UserPage() {
                   { id: 'company', label: 'Email' },
                   { id: 'role', label: 'Role' },
                   { id: 'isVerified', label: 'Phone Number', align: 'center' },
-                  { id: 'status', label: 'Status' },
                   { id: 'actions', label: 'Actions' },
-                  { id: '' },
                 ]}
               />
               <TableBody>
@@ -400,7 +398,6 @@ export default function UserPage() {
                         name={row?.fullName}
                         company={row?.email}
                         role={row?.role}
-                        status={row?.status}
                         avatarUrl={row.profileImage && row.profileImage}
                         isVerified={row?.phone}
                         selected={selected.indexOf(row?.fullName) !== -1}

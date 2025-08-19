@@ -5,20 +5,16 @@ import PropTypes from 'prop-types';
 
 import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
-import Popover from '@mui/material/Popover';
 import TableRow from '@mui/material/TableRow';
 import Checkbox from '@mui/material/Checkbox';
-import MenuItem from '@mui/material/MenuItem';
 import TableCell from '@mui/material/TableCell';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
-import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 
-import Label from 'src/components/label';
 import Iconify from 'src/components/iconify';
 import axiosInstance from 'src/api/axiosInstance';
 import AuthContext from 'src/context/AuthContext';
@@ -45,12 +41,10 @@ export default function UserTableRow({
   company,
   role,
   isVerified,
-  status,
   handleClick,
   onEdit,
   onDeleted,
 }) {
-  const [openPopover, setOpenPopover] = useState(null);
   const [openModal, setOpenModal] = useState(false);
 
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
@@ -60,15 +54,7 @@ export default function UserTableRow({
 
   const [userData, setUserData] = useState([]);
 
-  const handleOpenMenu = (event) => {
-    setOpenPopover(event.currentTarget);
-  };
-
   const { token } = useContext(AuthContext); // Access login method from AuthContext
-
-  const handleCloseMenu = () => {
-    setOpenPopover(null);
-  };
 
   const handleOpenDeleteModal = (id) => {
     setSelectedID(id)
@@ -141,10 +127,6 @@ export default function UserTableRow({
 
         <TableCell align="center">{isVerified ? isVerified : 'N/A'}</TableCell>
 
-        <TableCell>
-          <Label color={(status === 'banned' && 'error') || 'success'}>{status}</Label>
-        </TableCell>
-
 
         <TableCell>
           <Stack direction="row" spacing={1}>
@@ -161,11 +143,7 @@ export default function UserTableRow({
           </Stack>
         </TableCell>
 
-        <TableCell align="right">
-          <IconButton onClick={handleOpenMenu}>
-            <Iconify icon="eva:more-vertical-fill" />
-          </IconButton>
-        </TableCell>
+
       </TableRow>
 
       {/* <Popover
