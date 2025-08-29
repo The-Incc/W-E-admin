@@ -43,6 +43,11 @@ const navConfig = [
     path: '/subscriptions',
     icon: <SvgColor src={'/assets/icons/glass/ic_glass_message.png'} sx={{ width: 1, height: 1 }} />,
   },
+  {
+    title: 'email templates',
+    path: '/email-templates',
+    icon: <SvgColor src={'/assets/icons/glass/ic_glass_message.png'} sx={{ width: 1, height: 1 }} />,
+  },
   // {
   //   title: 'login',
   //   path: '/login',

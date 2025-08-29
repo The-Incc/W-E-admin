@@ -15,6 +15,7 @@ export const Page404 = lazy(() => import('src/pages/page-not-found'));
 export const SubscriptionsPage = lazy(() => import('src/pages/subscriptions'));
 export const AdminsPage = lazy(() => import('src/pages/admins'));
 export const ProfilePage = lazy(() => import('src/pages/profile'));
+export const EmailTemplatesPage = lazy(() => import('src/pages/email-templates'));
 
 // ----------------------------------------------------------------------
 
@@ -93,6 +94,10 @@ export default function Router() {
               <ProfilePage />
             </ProtectedRoute>
           ),
+        },
+        {
+          path: 'email-templates',
+          element: <EmailTemplatesPage />,
         },
       ],
     },
