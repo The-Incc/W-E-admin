@@ -273,9 +273,30 @@ export default function EmailTemplatesView() {
     setIsEdit(false);
   };
 
+  // Check if title already exists (case-insensitive)
+  const isTitleDuplicate = (title) => {
+    if (!templates || !Array.isArray(templates)) return false;
+    
+    const normalizedTitle = title.trim().toLowerCase();
+    return templates.some(template => {
+      // Skip the current template being edited
+      if (isEdit && selectedTemplate && template.id === selectedTemplate.id) {
+        return false;
+      }
+      return template.title.trim().toLowerCase() === normalizedTitle;
+    });
+  };
+
   const validateForm = () => {
     const errors = {};
-    if (!formData.title.trim()) errors.title = 'Title is required';
+    
+    // Title validation
+    if (!formData.title.trim()) {
+      errors.title = 'Title is required';
+    } else if (isTitleDuplicate(formData.title)) {
+      errors.title = 'Title must be unique. Please choose another.';
+    }
+    
     if (!formData.type) errors.type = 'Type is required';
     if (!formData.subject.trim()) errors.subject = 'Subject is required';
     if (!formData.content.trim()) errors.content = 'Content is required';
@@ -555,20 +576,20 @@ export default function EmailTemplatesView() {
 
                       <TableCell>
                         <Stack direction="row" spacing={1}>
-                          <Tooltip title="Preview">
+                          {/* <Tooltip title="Preview">
                             <IconButton size="small" onClick={() => handlePreviewTemplate(template)}>
                               <Visibility />
                             </IconButton>
-                          </Tooltip>
+                          </Tooltip> */}
 
-                          <Tooltip title="Test">
+                          {/* <Tooltip title="Test">
                             <IconButton size="small" onClick={() => {
                               setSelectedTemplate(template);
                               setOpenTestModal(true);
                             }}>
                               <Send />
                             </IconButton>
-                          </Tooltip>
+                          </Tooltip> */}
 
                           <Tooltip title="Edit">
                             <IconButton size="small" onClick={() => handleOpenModal(template)}>
@@ -624,7 +645,32 @@ export default function EmailTemplatesView() {
               fullWidth
               label="Title"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={(e) => {
+                const newTitle = e.target.value;
+                setFormData({ ...formData, title: newTitle });
+                
+                // Clear title error if it was previously showing
+                if (formErrors.title) {
+                  setFormErrors(prev => ({ ...prev, title: '' }));
+                }
+                
+                // Real-time validation for title uniqueness
+                if (newTitle.trim() && isTitleDuplicate(newTitle)) {
+                  setFormErrors(prev => ({ 
+                    ...prev, 
+                    title: 'Title must be unique. Please choose another.' 
+                  }));
+                }
+              }}
+              onBlur={() => {
+                // Validate title on blur
+                if (formData.title.trim() && isTitleDuplicate(formData.title)) {
+                  setFormErrors(prev => ({ 
+                    ...prev, 
+                    title: 'Title must be unique. Please choose another.' 
+                  }));
+                }
+              }}
               error={!!formErrors.title}
               helperText={formErrors.title}
               required
