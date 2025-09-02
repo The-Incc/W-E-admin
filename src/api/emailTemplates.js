@@ -42,3 +42,16 @@ export const getEmailTemplateTypes = async () => {
   return response.data;
 };
 
+// Upload image for email template
+export const uploadEmailTemplateImage = async (file) => {
+  const formData = new FormData();
+  formData.append('image', file);
+  
+  const response = await axiosInstance.post('/admin/email-templates/upload-image', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+

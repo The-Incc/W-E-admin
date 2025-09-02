@@ -53,6 +53,7 @@ import {
   deleteEmailTemplate,
   testEmailTemplate,
   getEmailTemplateTypes,
+  uploadEmailTemplateImage,
 } from 'src/api/emailTemplates';
 
 // context
@@ -60,6 +61,64 @@ import { useAuth } from 'src/context/AuthContext';
 
 export default function EmailTemplatesView() {
   const { user, token } = useAuth();
+  
+  // Custom image upload handler - manually handles file selection, API call, and embedding
+  const handleImageSelect = () => {
+    // Create a file input element
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.style.display = 'none';
+    document.body.appendChild(input);
+    
+    // Trigger file selection
+    input.click();
+    
+    // Handle file selection
+    input.onchange = async (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        try {
+          // Show loading toast
+          toast.loading('Uploading image...', { id: 'image-upload' });
+          
+          // Upload image to server
+          const response = await uploadEmailTemplateImage(file);
+          const imageUrl = response.image?.url || response.url;
+          
+          if (imageUrl) {
+            // Get the Quill editor instance
+            const quillEditor = document.querySelector('.ql-editor');
+            if (quillEditor) {
+              const quill = quillEditor.__quill;
+              if (quill) {
+                // Get current cursor position
+                const range = quill.getSelection();
+                const index = range ? range.index : quill.getLength();
+                
+                // Insert image at cursor position
+                quill.insertEmbed(index, 'image', imageUrl);
+                
+                // Move cursor after the image
+                quill.setSelection(index + 1);
+                quill.focus();
+              }
+            }
+            
+            toast.success('Image uploaded successfully', { id: 'image-upload' });
+          } else {
+            throw new Error('No image URL received from server');
+          }
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          toast.error('Failed to upload image', { id: 'image-upload' });
+        }
+      }
+      
+      // Clean up the input element
+      document.body.removeChild(input);
+    };
+  };
   
   // Custom styles for ReactQuill to match Material-UI
   useEffect(() => {
@@ -105,6 +164,14 @@ export default function EmailTemplatesView() {
         border: 1px solid #ddd;
         border-radius: 4px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      .ql-editor img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 10px 0;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       }
     `;
     document.head.appendChild(style);
@@ -732,15 +799,20 @@ export default function EmailTemplatesView() {
                     fontSize: '14px'
                   }}
                   modules={{
-                    toolbar: [
-                      [{ 'header': [1, 2, 3, false] }],
-                      ['bold', 'italic', 'underline', 'strike'],
-                      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                      [{ 'color': [] }, { 'background': [] }],
-                      [{ 'align': [] }],
-                      ['link', 'image'],
-                      ['clean']
-                    ]
+                    toolbar: {
+                      container: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'align': [] }],
+                        ['link', 'image'],
+                        ['clean']
+                      ],
+                      handlers: {
+                        image: handleImageSelect
+                      }
+                    }
                   }}
                   placeholder="Start typing your email content here..."
                 />
