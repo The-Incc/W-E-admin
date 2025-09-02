@@ -97,7 +97,11 @@ export default function Router() {
         },
         {
           path: 'email-templates',
-          element: <EmailTemplatesPage />,
+          element: (
+            <ProtectedRoute>
+              <EmailTemplatesPage />
+            </ProtectedRoute>
+          ),
         },
       ],
     },
