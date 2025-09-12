@@ -34,17 +34,14 @@ const style = {
 };
 
 export default function UserTableRow({
-  id,
+  row,
   selected,
-  name,
-  avatarUrl,
-  company,
-  role,
-  isVerified,
   handleClick,
   onEdit,
   onDeleted,
 }) {
+  const { id, fullName, email, phone, role, gender, state, zipcode, profileImage } = row;
+
   const [openModal, setOpenModal] = useState(false);
 
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
@@ -75,7 +72,6 @@ export default function UserTableRow({
 
   const handleDeleteUser = async () => {
     try {
-      setOpenDeleteModal(true)
       const response = await axiosInstance.post(`/user/deleteUser/${selectedID}`, {}, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -112,60 +108,40 @@ export default function UserTableRow({
           <Checkbox disableRipple checked={selected} onChange={handleClick} />
         </TableCell>
 
-        <TableCell component="th" scope="row" padding="none" onClick={handleOpenModal}>
+        <TableCell component="th" scope="row" padding="none" onClick={() => setOpenModal(true)}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Avatar alt={name} src={avatarUrl} />
+            <Avatar alt={fullName} src={profileImage} />
             <Typography variant="subtitle2" noWrap>
-              {name}
+              {fullName}
             </Typography>
           </Stack>
         </TableCell>
 
-        <TableCell>{company}</TableCell>
-
+        <TableCell>{email}</TableCell>
+        <TableCell>{phone}</TableCell>
         <TableCell>{role}</TableCell>
-
-        <TableCell align="center">{isVerified ? isVerified : 'N/A'}</TableCell>
-
 
         <TableCell>
           <Stack direction="row" spacing={1}>
             <Tooltip title="Edit User" arrow>
-              <IconButton size="small" color="primary" onClick={() => onEdit && onEdit({ id, fullName: name, email: company, phone: isVerified, role, status, avatarUrl })}>
+              <IconButton
+                size="small"
+                color="primary"
+                // 🔑 pura row bhej do
+                onClick={() => onEdit && onEdit(row)}
+              >
                 <Iconify icon="eva:edit-2-outline" />
               </IconButton>
             </Tooltip>
             <Tooltip title="Delete User" arrow>
               <IconButton size="small" color="error" onClick={() => handleOpenDeleteModal(id)}>
+
                 <Iconify icon="eva:trash-2-outline" />
               </IconButton>
             </Tooltip>
           </Stack>
         </TableCell>
-
-
       </TableRow>
-
-      {/* <Popover
-        open={!!openPopover}
-        anchorEl={openPopover}
-        onClose={handleCloseMenu}
-        anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        PaperProps={{
-          sx: { width: 140 },
-        }}
-      >
-        <MenuItem onClick={handleCloseMenu}>
-          <Iconify icon="eva:edit-fill" sx={{ mr: 2 }} />
-          Edit
-        </MenuItem>
-
-        <MenuItem onClick={handleCloseMenu} sx={{ color: 'error.main' }}>
-          <Iconify icon="eva:trash-2-outline" sx={{ mr: 2 }} />
-          Delete
-        </MenuItem>
-      </Popover> */}
 
       <Modal
         open={openModal}
@@ -175,15 +151,16 @@ export default function UserTableRow({
       >
         <Box sx={style} borderRadius={3}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Avatar alt={name} src={avatarUrl} style={{ height: 70, width: 70 }} />
+            <Avatar alt={fullName} src={profileImage} style={{ height: 70, width: 70 }} />
             <Typography
               variant="subtitle2"
               noWrap
               style={{ marginRight: '8px', fontWeight: 600, fontSize: 20 }}
             >
-              {name}
+              {fullName}
             </Typography>
           </Stack>
+
           <Box mt={3}>
             <span style={{ fontWeight: 600, fontSize: 18 }}>Personal Information:</span>
           </Box>
@@ -198,7 +175,7 @@ export default function UserTableRow({
                   display: 'inline-block',
                 }}
               >
-                {company}
+                {email}
               </p>
             </Stack>
             <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
@@ -211,29 +188,11 @@ export default function UserTableRow({
                   display: 'inline-block',
                 }}
               >
-                {isVerified ? isVerified : 'N/A'}
-              </p>
-            </Stack>
-          </Box>
-          <Box mt={1}>
-            <span style={{ fontWeight: 600, fontSize: 18 }}>Calculator Results:</span>
-          </Box>{' '}
-          <Box direction="row" spacing={4} sx={{ display: 'inline-flex', flexWrap: 'wrap' }}>
-            <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Income Replacement</span>
-              <p
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  display: 'inline-block',
-                }}
-              >
-                $ {userData?.annualIncome}
+                {phone ? phone : 'N/A'}
               </p>
             </Stack>
             <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Debt Elimination</span>
+              <span style={{ marginRight: '8px', fontWeight: 600 }}>Gender</span>
               <p
                 style={{
                   backgroundColor: '#f5f5f5',
@@ -242,50 +201,11 @@ export default function UserTableRow({
                   display: 'inline-block',
                 }}
               >
-                $ {userData?.eliminateDebt}
-              </p>
-            </Stack>{' '}
-            <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Childcare</span>
-              <p
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  display: 'inline-block',
-                }}
-              >
-                $ {userData?.childcare}
-              </p>
-            </Stack>{' '}
-            <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Extended Healthcare</span>
-              <p
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  display: 'inline-block',
-                }}
-              >
-                $ {userData?.extendedHealthcare}
-              </p>
-            </Stack>{' '}
-            <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Education Fund</span>
-              <p
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  display: 'inline-block',
-                }}
-              >
-                $ {userData?.education}
+                {gender}
               </p>
             </Stack>
             <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Emergency Fund</span>
+              <span style={{ marginRight: '8px', fontWeight: 600 }}>State</span>
               <p
                 style={{
                   backgroundColor: '#f5f5f5',
@@ -294,11 +214,11 @@ export default function UserTableRow({
                   display: 'inline-block',
                 }}
               >
-                $ {userData?.emergencyFund}
+                {state}
               </p>
             </Stack>
             <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Final Expenses </span>
+              <span style={{ marginRight: '8px', fontWeight: 600 }}>Zipcode</span>
               <p
                 style={{
                   backgroundColor: '#f5f5f5',
@@ -307,12 +227,13 @@ export default function UserTableRow({
                   display: 'inline-block',
                 }}
               >
-                $ {userData?.finalExpense}
+                {zipcode}
               </p>
             </Stack>
           </Box>
         </Box>
       </Modal>
+
       <Modal
         open={openDeleteModal}
         onClose={handleCloseDeleteModal}
@@ -348,12 +269,19 @@ export default function UserTableRow({
 }
 
 UserTableRow.propTypes = {
-  avatarUrl: PropTypes.any,
-  company: PropTypes.any,
+  row: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    fullName: PropTypes.string,
+    email: PropTypes.string,
+    phone: PropTypes.string,
+    role: PropTypes.string,
+    gender: PropTypes.string,
+    state: PropTypes.string,
+    zipcode: PropTypes.string,
+    profileImage: PropTypes.string,
+  }).isRequired,
+  selected: PropTypes.bool,
   handleClick: PropTypes.func,
-  isVerified: PropTypes.any,
-  name: PropTypes.any,
-  role: PropTypes.any,
-  selected: PropTypes.any,
-  status: PropTypes.string,
+  onEdit: PropTypes.func,
+  onDeleted: PropTypes.func,
 };

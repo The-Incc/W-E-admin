@@ -29,8 +29,7 @@ const MENU_OPTIONS = [
 
 export default function AccountPopover() {
   const [open, setOpen] = useState(null);
-  const { logout, user } = useContext(AuthContext); // Get logout function from AuthContext
-  const [loggedInUser, setLoggedInUser] = useState({});
+  const { logout, user } = useContext(AuthContext);
   const navigate = useNavigate(); // Initialize useNavigate
 
   const [users, setUsers] = useState(null);
@@ -48,10 +47,6 @@ export default function AccountPopover() {
     logout(); // Call logout function from AuthContext
     navigate('/login'); // Redirect to login page after logout
   };
-
-  useEffect(() => {
-    setLoggedInUser(JSON.parse(localStorage.getItem('user')));
-  }, [])
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -84,9 +79,9 @@ export default function AccountPopover() {
           }),
         }}
       >
-        <Avatar
+        {/* <Avatar
           src={account.photoURL}
-          alt={loggedInUser?.fullName}
+          alt={user?.fullName}
           sx={{
             width: 36,
             height: 36,
@@ -94,7 +89,19 @@ export default function AccountPopover() {
           }}
         >
           {account.displayName.charAt(0).toUpperCase()}
+        </Avatar> */}
+        <Avatar
+          src={user?.profileImage || ''}
+          alt={user?.fullName}
+          sx={{
+            width: 36,
+            height: 36,
+            border: (theme) => `solid 2px ${theme.palette.background.default}`,
+          }}
+        >
+          {user?.fullName?.charAt(0).toUpperCase()}
         </Avatar>
+
       </IconButton>
 
       <Popover
@@ -114,10 +121,10 @@ export default function AccountPopover() {
       >
         <Box sx={{ my: 1.5, px: 2 }}>
           <Typography variant="subtitle2" noWrap>
-            {loggedInUser?.fullName}
+            {user?.fullName}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
-            {loggedInUser?.email}
+            {user?.email}
           </Typography>
         </Box>
 

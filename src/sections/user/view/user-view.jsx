@@ -236,7 +236,9 @@ export default function UserPage() {
     setFormPhone(user.phone || '');
     setFormPassword('');
     setFormRole(user.role || 'customer');
-    setFormGender(user.gender || 'male');
+    // setFormGender(user.gender || 'male');
+    setFormGender(user.gender ?? 'male');
+
     setFormState(user.state || '');
     setFormZipcode(user.zipcode || '');
     setFormFile(null);
@@ -299,7 +301,7 @@ export default function UserPage() {
     if (!editingUser) {
       formData.append('password', formPassword);
     }
-    if (formFile) formData.append('file', formFile);
+    if (formFile) formData.append('image', formFile);
 
     try {
       setIsSubmitting(true);
@@ -339,8 +341,8 @@ export default function UserPage() {
       setSnackbarMessage(error?.response?.data?.message || 'Error adding user. Please try again.');
       setSeverity('error');
       setSnackBarOpen(true);
-    } finally { 
-      setIsSubmitting(false); 
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -394,17 +396,13 @@ export default function UserPage() {
                     return (
                       <UserTableRow
                         key={row?.id}
-                        id={row?.id}
-                        name={row?.fullName}
-                        company={row?.email}
-                        role={row?.role}
-                        avatarUrl={row.profileImage && row.profileImage}
-                        isVerified={row?.phone}
+                        row={row}   
                         selected={selected.indexOf(row?.fullName) !== -1}
                         handleClick={(event) => handleClick(event, row?.fullName)}
                         onEdit={handleEditUser}
-                        onDeleted={(deletedId)=> setUsers(prev => prev.filter(u => u.id !== deletedId))}
+                        onDeleted={(deletedId) => setUsers(prev => prev.filter(u => u.id !== deletedId))}
                       />
+
                     )
                   })}
 
@@ -486,41 +484,41 @@ export default function UserPage() {
 
             />
             <Stack direction="row" spacing={2}>
-              <TextField 
-                id="role" 
-                label="Role" 
-                variant="outlined" 
-                value={formRole} 
-                onChange={(e)=> setFormRole(e.target.value)} 
-                helperText="e.g., customer, admin, vendor" 
+              <TextField
+                id="role"
+                label="Role"
+                variant="outlined"
+                value={formRole}
+                onChange={(e) => setFormRole(e.target.value)}
+                helperText="e.g., customer, admin, vendor"
               />
-              <TextField 
-                id="gender" 
-                label="Gender" 
-                variant="outlined" 
-                value={formGender} 
-                onChange={(e)=> setFormGender(e.target.value)} 
-                helperText="male, female, other" 
+              <TextField
+                id="gender"
+                label="Gender"
+                variant="outlined"
+                value={formGender}
+                onChange={(e) => setFormGender(e.target.value)}
+                helperText="male, female, other"
               />
             </Stack>
             <Stack direction="row" spacing={2}>
-              <TextField 
-                id="state" 
-                label="State" 
-                variant="outlined" 
-                value={formState} 
-                onChange={(e)=> setFormState(e.target.value)} 
-                error={!!stateError} 
-                helperText={stateError} 
+              <TextField
+                id="state"
+                label="State"
+                variant="outlined"
+                value={formState}
+                onChange={(e) => setFormState(e.target.value)}
+                error={!!stateError}
+                helperText={stateError}
               />
-              <TextField 
-                id="zipcode" 
-                label="Zipcode" 
-                variant="outlined" 
-                value={formZipcode} 
-                onChange={(e)=> setFormZipcode(e.target.value)} 
-                error={!!zipcodeError} 
-                helperText={zipcodeError} 
+              <TextField
+                id="zipcode"
+                label="Zipcode"
+                variant="outlined"
+                value={formZipcode}
+                onChange={(e) => setFormZipcode(e.target.value)}
+                error={!!zipcodeError}
+                helperText={zipcodeError}
               />
             </Stack>
             <TextField

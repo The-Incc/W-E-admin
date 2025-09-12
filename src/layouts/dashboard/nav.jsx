@@ -31,13 +31,27 @@ import AuthContext from 'src/context/AuthContext';
 export default function Nav({ openNav, onCloseNav }) {
   const pathname = usePathname();
   const { user } = useContext(AuthContext);
-  const [loggedInUser, setLoggedInUser] = useState({});
 
   const upLg = useResponsive('up', 'lg');
 
+  const [loggedInUser, setLoggedInUser] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return JSON.parse(localStorage.getItem('user')) || {};
+      } catch {
+        return {};
+      }
+    }
+
+
+    return {};
+  });
+  const displayName = user?.fullName || loggedInUser?.fullName || '';
+
+  // update local state whenever AuthContext user becomes available/changes
   useEffect(() => {
-    setLoggedInUser(JSON.parse(localStorage.getItem('user')));
-  }, [])
+    if (user) setLoggedInUser(user);
+  }, [user]);
 
   useEffect(() => {
     if (openNav) {
@@ -59,7 +73,22 @@ export default function Nav({ openNav, onCloseNav }) {
         bgcolor: (theme) => alpha(theme.palette.grey[500], 0.12),
       }}
     >
-      <Avatar src={account.photoURL} alt="photoURL" />
+      {/* <Avatar src={loggedInUser?.photoURL} alt={loggedInUser?.fullName} /> */}
+      <Avatar
+        src={
+          user?.profileImage ||
+          user?.photoURL ||
+          loggedInUser?.profileImage ||
+          loggedInUser?.photoURL ||
+          ''
+        }
+        alt={displayName}
+        sx={{ width: 40, height: 40 }}
+      >
+        {displayName ? displayName.charAt(0).toUpperCase() : 'U'}
+      </Avatar>
+
+
 
       <Box sx={{ ml: 2 }}>
         <Typography variant="subtitle2">{loggedInUser?.fullName}</Typography>

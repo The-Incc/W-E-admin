@@ -16,7 +16,8 @@ import AuthContext from 'src/context/AuthContext';
 import axiosInstance from 'src/api/axiosInstance';
 
 export default function ProfileView() {
-  const { user, token } = useContext(AuthContext);
+  const { user, token , setUser } = useContext(AuthContext);
+
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [profileImage, setProfileImage] = useState(null);
@@ -62,7 +63,7 @@ export default function ProfileView() {
     const formData = new FormData();
     formData.append('fullName', fullName);
     formData.append('email', email);
-    if (profileImage) formData.append('file', profileImage);
+    if (profileImage) formData.append('image', profileImage);
 
     setIsSubmitting(true);
     try {
@@ -73,8 +74,16 @@ export default function ProfileView() {
         setSeverity('success');
         setSnackbarMessage('Profile updated successfully');
         setSnackBarOpen(true);
-        // optionally refresh user from /auth/me
+
+        const meRes = await axiosInstance.get('/auth/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log("meRes response:", meRes);
+        if (meRes.status === 200) {
+          setUser(meRes.data.user);
+        }
       }
+
     } catch (err) {
       setSeverity('error');
       setSnackbarMessage('Failed to update profile');
@@ -168,7 +177,7 @@ export default function ProfileView() {
               <input type="file" accept="image/*" hidden onChange={handleImageChange} />
             </Button>
             <Stack direction="row" spacing={2}>
-              <Button type="button" variant="outlined" color="inherit" disabled={isSubmitting} onClick={()=>{ setFullName(user?.fullName||''); setEmail(user?.email||''); setProfileImage(null); setProfilePreview(user?.profileImage||null);}}>Cancel</Button>
+              <Button type="button" variant="outlined" color="inherit" disabled={isSubmitting} onClick={() => { setFullName(user?.fullName || ''); setEmail(user?.email || ''); setProfileImage(null); setProfilePreview(user?.profileImage || null); }}>Cancel</Button>
               <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>Save</Button>
             </Stack>
           </Stack>
@@ -183,7 +192,7 @@ export default function ProfileView() {
               type="password"
               required
               value={newPassword}
-              onChange={(e)=>setNewPassword(e.target.value)}
+              onChange={(e) => setNewPassword(e.target.value)}
               error={!!newPasswordError}
               helperText={newPasswordError}
             />
@@ -192,12 +201,12 @@ export default function ProfileView() {
               type="password"
               required
               value={confirmPassword}
-              onChange={(e)=>setConfirmPassword(e.target.value)}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               error={!!confirmPasswordError}
               helperText={confirmPasswordError}
             />
             <Stack direction="row" spacing={2}>
-              <Button type="button" variant="outlined" color="inherit" disabled={isSubmitting} onClick={()=>{ setNewPassword(''); setConfirmPassword(''); setNewPasswordError(''); setConfirmPasswordError(''); }}>Cancel</Button>
+              <Button type="button" variant="outlined" color="inherit" disabled={isSubmitting} onClick={() => { setNewPassword(''); setConfirmPassword(''); setNewPasswordError(''); setConfirmPasswordError(''); }}>Cancel</Button>
               <Button type="submit" variant="contained" color="primary" disabled={isSubmitting || !!newPasswordError || !!confirmPasswordError}>Update Password</Button>
             </Stack>
           </Stack>

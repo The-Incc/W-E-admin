@@ -44,14 +44,29 @@ export default function TestimonialView() {
 
   const [testimonials, setTestimonials] = useState([]);
 
+  const [nameError, setNameError] = useState('');
+  const [descriptionError, setDescriptionError] = useState('');
+  const [locationError, setLocationError] = useState('');
+  const [videoError, setVideoError] = useState('');
+
+
+
+
+
+
+
   const { token } = useContext(AuthContext);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  const handleDescriptionChange = (event) => {
-    setDescription(event.target.value);
+  const handleDescriptionChange = (value) => {
+    setDescription(value);
+    if (descriptionError && value.trim()) {
+      setDescriptionError('');
+    }
   };
+
 
   const handleNameChange = (event) => {
     setName(event.target.value);
@@ -61,6 +76,19 @@ export default function TestimonialView() {
     setLocation(event.target.value);
   };
 
+  // const handleImageChange = (event) => {
+  //   const file = event.target.files && event.target.files[0];
+  //   if (!file) return;
+  //   if (!file.type.startsWith('video/')) {
+  //     setSeverity('error');
+  //     setSnackbarMessage('Only video files are allowed for testimonials.');
+  //     setSnackBarOpen(true);
+  //     return;
+  //   }
+  //   setImage(file);
+  //   const previewUrl = URL.createObjectURL(file);
+  //   setImagePreview(previewUrl);
+  // };
   const handleImageChange = (event) => {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
@@ -71,9 +99,12 @@ export default function TestimonialView() {
       return;
     }
     setImage(file);
-    const previewUrl = URL.createObjectURL(file);
-    setImagePreview(previewUrl);
+    setImagePreview(URL.createObjectURL(file));
+
+    // agar error pehle thi to hata do
+    if (videoError) setVideoError('');
   };
+
 
   useEffect(() => {
     return () => {
@@ -98,6 +129,39 @@ export default function TestimonialView() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    let hasError = false;
+
+    if (!name.trim()) {
+      setNameError('Name is required');
+      hasError = true;
+    } else {
+      setNameError('');
+    }
+
+    if (!description.trim()) {
+      setDescriptionError('Description is required');
+      hasError = true;
+    } else {
+      setDescriptionError('');
+    }
+
+    if (!location.trim()) {
+      setLocationError('Location is required');
+      hasError = true;
+    } else {
+      setLocationError('');
+    }
+
+    if (!image) {
+      setVideoError('Video is required');
+      hasError = true;
+    } else {
+      setVideoError('');
+    }
+
+
+    if (hasError) return; // stop form submission if any error
 
     const formData = new FormData();
     formData.append('name', name);
@@ -155,6 +219,7 @@ export default function TestimonialView() {
     }
   };
 
+
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
@@ -171,101 +236,159 @@ export default function TestimonialView() {
 
 
   return (
-    <Container>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
-        <Typography variant="h4">Testmonials</Typography>
+      <Container>
 
-        <Button
-          variant="contained"
-          color="inherit"
-          onClick={handleOpen}
-          startIcon={<Iconify icon="eva:plus-fill" />}
-        >
-          Add Testimonial
-        </Button>
-        <Modal
-          open={open}
-          onClose={handleClose}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-        >
-          <Box sx={style} borderRadius={3}>
-            <Backdrop open={isSubmitting} sx={{ zIndex: (theme) => theme.zIndex.modal + 1, color: '#fff' }}>
-              <CircularProgress color="inherit" />
-            </Backdrop>
-            <Box component="form" onSubmit={handleSubmit} noValidate>
-              <Stack spacing={2} mt={2} width={800}>
-              
-              <TextField
-                label="Name"
-                variant="outlined"
-                value={name}
-                onChange={handleNameChange}
-              />
-              <div>
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>Description</Typography>
-                <ReactQuill theme="snow" value={description} onChange={setDescription} />
-              </div>
-              <TextField
-                label="Location"
-                variant="outlined"
-                value={location}
-                onChange={handleLocationChange}
-              />
-              {imagePreview && (
-                <Box sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 2,
-                  p: 1,
-                  border: '1px dashed',
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                  bgcolor: 'background.default',
-                }}>
-                  <video width="320" height="180" controls style={{ borderRadius: 6, border: '1px solid', borderColor: 'divider' }}>
-                    <source src={imagePreview} type={image?.type || 'video/mp4'} />
-                    Your browser does not support the video tag.
-                  </video>
-                </Box>
-              )}
-                <Stack direction="row" spacing={2} alignItems="center" justifyContent="flex-start">
-                <Button
-                  variant="contained"
-                  component="label"
-                  color="inherit"
-                >
-                  Upload Video
-                  <input type="file" accept="video/*" hidden onChange={handleImageChange} />
-                </Button>
-                {imagePreview && (
-                  <Button variant="text" color="error" onClick={() => { setImage(null); setImagePreview(null); }}>
-                    Remove
-                  </Button>
-                )}
-              </Stack>
-                <Stack direction="row" spacing={2} justifyContent="flex-end">
-                  <Button variant="outlined" color="inherit" onClick={handleClose}>
-                    Cancel
-                  </Button>
-                  <Button variant="contained" color="primary" type="submit">
-                    Save
-                  </Button>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
+          <Typography variant="h4">Testmonials</Typography>
+
+          <Button
+            variant="contained"
+            color="inherit"
+            onClick={handleOpen}
+            startIcon={<Iconify icon="eva:plus-fill" />}
+          >
+            Add Testimonial
+          </Button>
+          <Modal
+            open={open}
+            onClose={handleClose}
+            aria-labelledby="modal-modal-title"
+            aria-describedby="modal-modal-description"
+          >
+            <Box sx={style} borderRadius={3}>
+              <Backdrop open={isSubmitting} sx={{ zIndex: (theme) => theme.zIndex.modal + 1, color: '#fff' }}>
+                <CircularProgress color="inherit" />
+              </Backdrop>
+              <Box component="form" onSubmit={handleSubmit} noValidate>
+                <Stack spacing={2} mt={2} width={800}>
+
+
+                  <TextField
+                    label="Name"
+                    variant="outlined"
+                    value={name}
+                    onChange={handleNameChange}
+                    error={!!nameError}
+                    helperText={nameError}
+                    sx={{
+                      '& .MuiOutlinedInput-root.Mui-error': {
+                        '& fieldset': { borderColor: '#FF5630' },
+                      },
+                      '& .MuiFormHelperText-root': { color: '#FF5630' },
+                    }}
+                  />
+
+                  <Box
+                    sx={{
+                      border: descriptionError ? '1px solid #FF5630' : '1px solid #ccc',
+                      borderRadius: 1,
+                      mb: descriptionError ? 1 : 2,
+                      overflow: 'hidden',
+                      '& .ql-container': {
+                        minHeight: 120,
+                        border: 'none',
+                      },
+                    }}
+                  >
+                    <ReactQuill
+                      theme="snow"
+                      value={description}
+                      onChange={handleDescriptionChange}
+                    />
+                  </Box>
+
+                  {descriptionError && (
+                    <Typography variant="caption" sx={{ color: '#FF5630', pl: 1.5 }}>
+                      {descriptionError}
+                    </Typography>
+                  )}
+
+                  <TextField
+                    label="Location"
+                    variant="outlined"
+                    value={location}
+                    onChange={handleLocationChange}
+                    error={!!locationError}
+                    helperText={locationError}
+                    sx={{
+                      '& .MuiOutlinedInput-root.Mui-error': {
+                        '& fieldset': {
+                          borderColor: '#FF5630',
+                        },
+                      },
+                      '& .MuiFormHelperText-root': {
+                        color: '#FF5630',
+                      },
+                    }}
+                  />
+
+                  {imagePreview && (
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                      p: 1,
+                      border: '1px dashed',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                      bgcolor: 'background.default',
+                    }}>
+                      <video width="320" height="180" controls style={{ borderRadius: 6, border: '1px solid', borderColor: 'divider' }}>
+                        <source src={imagePreview} type={image?.type || 'video/mp4'} />
+                        Your browser does not support the video tag.
+                      </video>
+                    </Box>
+                  )}
+
+                  <Stack direction="row" spacing={2} alignItems="center" justifyContent="flex-start">
+                    <Button
+                      variant="contained"
+                      component="label"
+                      color="inherit"
+                    >
+                      Upload Video
+                      <input type="file" accept="video/*" hidden onChange={handleImageChange} />
+                    </Button>
+                    {imagePreview && (
+                      <Button variant="text" color="error" onClick={() => { setImage(null); setImagePreview(null); }}>
+                        Remove
+                      </Button>
+                    )}
+
+
+
+                  </Stack>
+
+
+                  {videoError && !imagePreview && (
+                    <Typography variant="caption" sx={{ color: '#FF5630', pl: 1.5 }}>
+                      {videoError}
+                    </Typography>
+                  )}
+
+
+                  <Stack direction="row" spacing={2} justifyContent="flex-end">
+                    <Button variant="outlined" color="inherit" onClick={handleClose}>
+                      Cancel
+                    </Button>
+                    <Button variant="contained" color="primary" type="submit">
+                      Save
+                    </Button>
+                  </Stack>
                 </Stack>
-              </Stack>
+              </Box>
             </Box>
-          </Box>
-        </Modal>
-      </Stack>
+          </Modal>
+        </Stack>
 
-      <Stack mb={5} direction="row" alignItems="center" justifyContent="space-between"></Stack>
+        <Stack mb={5} direction="row" alignItems="center" justifyContent="space-between"></Stack>
 
-      <Grid container spacing={3}>
-        {testimonials.map((post, index) => (
-          <PostCard key={post.id} post={post} index={index} onEdit={handleEdit} />
-        ))}
-      </Grid>
-    </Container>
+        <Grid container spacing={3}>
+          {testimonials.map((post, index) => (
+            <PostCard key={post.id} post={post} index={index} onEdit={handleEdit} />
+          ))}
+        </Grid>
+      </Container>
   );
 }
 
