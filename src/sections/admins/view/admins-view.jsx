@@ -222,12 +222,13 @@ export default function AdminsView() {
                 {dataFiltered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
                   <UserTableRow
                     key={row?.id}
-                    id={row?.id}
-                    name={row?.fullName}
-                    company={row?.email}
-                    role={row?.role}
-                    avatarUrl={row.profileImage && row.profileImage}
-                    isVerified={row?.phone}
+                    // id={row?.id}
+                    // name={row?.fullName}
+                    // company={row?.email}
+                    // role={row?.role}
+                    // avatarUrl={row.profileImage && row.profileImage}
+                    // isVerified={row?.phone}
+                     row={row}
                     selected={selected.indexOf(row?.fullName) !== -1}
                     handleClick={(event) => handleClick(event, row?.fullName)}
                     onEdit={handleEditAdmin}

@@ -86,7 +86,7 @@ export default function UserPage() {
   };
 
   // const [order, setOrder] = useState('asc');
-    const [order, setOrder] = useState('desc');
+  const [order, setOrder] = useState('desc');
 
   const [selected, setSelected] = useState([]);
 
@@ -232,6 +232,13 @@ export default function UserPage() {
     setFormZipcode('');
     setFormFile(null);
     setImagePreview(null);
+    // Reset previous error messages
+    setFullNameError('');
+    setEmailError('');
+    setPhoneError('');
+    setPasswordError('');
+    setStateError('');
+    setZipcodeError('');
     setOpenModal(true);
   };
 
