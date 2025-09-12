@@ -112,7 +112,7 @@ export default function Nav({ openNav, onCloseNav }) {
       return navConfig;
     }
     // Regular users: hide admin-only entries
-    const adminOnlyTitles = new Set(['user', 'subscriptions', 'admins']);
+    const adminOnlyTitles = new Set(['user', 'subscriptions', 'admins', 'email templates', 'blog', 'testimonial']);
     return navConfig.filter((item) => !adminOnlyTitles.has(item.title));
   };
 

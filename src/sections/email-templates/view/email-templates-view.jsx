@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -53,6 +53,7 @@ import {
   deleteEmailTemplate,
   testEmailTemplate,
   getEmailTemplateTypes,
+  uploadEmailTemplateImage,
 } from 'src/api/emailTemplates';
 
 // context
@@ -60,6 +61,22 @@ import { useAuth } from 'src/context/AuthContext';
 
 export default function EmailTemplatesView() {
   const { user, token } = useAuth();
+  const quillRef = useRef(null);
+  
+  const [templates, setTemplates] = useState([]);
+  const [templateTypes, setTemplateTypes] = useState(['Welcome', 'Subscription', 'Reminder', 'Notification', 'Marketing']);
+  const [loading, setLoading] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [openTestModal, setOpenTestModal] = useState(false);
+  const [openPreviewModal, setOpenPreviewModal] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [isEdit, setIsEdit] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [filterName, setFilterName] = useState('');
+  const [filterType, setFilterType] = useState('');
   
   // Custom styles for ReactQuill to match Material-UI
   useEffect(() => {
@@ -106,6 +123,14 @@ export default function EmailTemplatesView() {
         border-radius: 4px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       }
+      .ql-editor img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 10px 0;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
     `;
     document.head.appendChild(style);
     
@@ -113,21 +138,117 @@ export default function EmailTemplatesView() {
       document.head.removeChild(style);
     };
   }, []);
+  
+  // Setup custom image handler after component mounts and when modal opens
+  useEffect(() => {
+    // Only attempt to set up handler when modal is open (editor is visible)
+    if (!openModal || !quillRef.current) {
+      return;
+    }
+    
+    console.log('Setting up image handler for Quill editor');
+    
+    // Function to set up the image handler
+    const setupImageHandler = () => {
+      try {
+        const editor = quillRef.current.getEditor();
+        if (!editor) {
+          console.error('Failed to get Quill editor instance');
+          return;
+        }
+        
+        const toolbar = editor.getModule('toolbar');
+        if (!toolbar) {
+          console.error('Failed to get Quill toolbar module');
+          return;
+        }
+        
+        console.log('Successfully got Quill toolbar, adding image handler');
+        
+        // Add custom image handler
+        toolbar.addHandler('image', function() {
+          console.log('Toolbar image button clicked');
+          handleImageUpload(editor);
+        });
+        
+        console.log('Image handler successfully attached to toolbar');
+      } catch (error) {
+        console.error('Error setting up image handler:', error);
+      }
+    };
+    
+    // Try immediately
+    setupImageHandler();
+    
+    // Also try with delays to ensure Quill is fully initialized
+    const shortDelay = setTimeout(setupImageHandler, 300);
+    const longDelay = setTimeout(setupImageHandler, 1000);
+    
+    return () => {
+      clearTimeout(shortDelay);
+      clearTimeout(longDelay);
+    };
+  }, [openModal]); // Re-run when modal opens
 
-  const [templates, setTemplates] = useState([]);
-  const [templateTypes, setTemplateTypes] = useState(['Welcome', 'Subscription', 'Reminder', 'Notification', 'Marketing']);
-  const [loading, setLoading] = useState(false);
-  const [openModal, setOpenModal] = useState(false);
-  const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const [openTestModal, setOpenTestModal] = useState(false);
-  const [openPreviewModal, setOpenPreviewModal] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [isEdit, setIsEdit] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [filterName, setFilterName] = useState('');
-  const [filterType, setFilterType] = useState('');
+  // Separate function to handle image uploads
+  const handleImageUpload = (editor) => {
+    console.log('handleImageUpload called');
+    
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.style.display = 'none';
+    document.body.appendChild(input);
+    
+    // Trigger file selection
+    input.click();
+    
+    // Handle file selection
+    input.onchange = async (event) => {
+      console.log('File selected:', event.target.files[0]?.name);
+      const file = event.target.files[0];
+      if (file) {
+        try {
+          // Show loading toast
+          toast.loading('Uploading image...', { id: 'image-upload' });
+          console.log('Calling uploadEmailTemplateImage API');
+          
+          // Upload image to server
+          const response = await uploadEmailTemplateImage(file);
+          console.log('API response received:', response);
+          
+          const imageUrl = response.image?.url || response.url;
+          
+          if (imageUrl) {
+            console.log('Image URL received:', imageUrl);
+            
+            // Get current cursor position
+            const range = editor.getSelection(true);
+            const index = range ? range.index : editor.getLength();
+            
+            console.log('Inserting image at position:', index);
+            
+            // Insert image at cursor position
+            editor.insertEmbed(index, 'image', imageUrl);
+            
+            // Move cursor after the image
+            editor.setSelection(index + 1);
+            editor.focus();
+            
+            toast.success('Image uploaded successfully', { id: 'image-upload' });
+          } else {
+            throw new Error('No image URL received from server');
+          }
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          toast.error('Failed to upload image: ' + (error.message || 'Unknown error'), { id: 'image-upload' });
+        }
+      }
+      
+      // Clean up the input element
+      document.body.removeChild(input);
+    };
+  };
 
   // Form state
   const [formData, setFormData] = useState({
@@ -722,8 +843,38 @@ export default function EmailTemplatesView() {
                   ))}
                 </Stack>
               </Box>
-              <Box sx={{ border: '1px solid #ddd', borderRadius: 1, overflow: 'hidden' }}>
+              <Box sx={{ border: '1px solid #ddd', borderRadius: 1, overflow: 'hidden', position: 'relative' }}>
+                {/* Image upload button positioned at the top right */}
+                <Box sx={{ 
+                  position: 'absolute', 
+                  top: 0, 
+                  right: 0, 
+                  zIndex: 100, 
+                  p: 0.5,
+                  backgroundColor: '#f8f9fa',
+                  borderBottom: '1px solid #ddd',
+                  borderLeft: '1px solid #ddd',
+                  borderBottomLeftRadius: 4
+                }}>
+                  <Tooltip title="Upload Image">
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        console.log('Toolbar image button clicked');
+                        if (quillRef.current) {
+                          handleImageUpload(quillRef.current.getEditor());
+                        } else {
+                          console.error('quillRef not available');
+                        }
+                      }}
+                    >
+                      <Iconify icon="mdi:image-plus" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+                
                 <ReactQuill
+                  ref={quillRef}
                   theme="snow"
                   value={formData.content}
                   onChange={handleContentChange}
@@ -732,22 +883,24 @@ export default function EmailTemplatesView() {
                     fontSize: '14px'
                   }}
                   modules={{
-                    toolbar: [
-                      [{ 'header': [1, 2, 3, false] }],
-                      ['bold', 'italic', 'underline', 'strike'],
-                      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                      [{ 'color': [] }, { 'background': [] }],
-                      [{ 'align': [] }],
-                      ['link', 'image'],
-                      ['clean']
-                    ]
+                    toolbar: {
+                      container: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'align': [] }],
+                        ['link'],
+                        ['clean']
+                      ]
+                    }
                   }}
                   placeholder="Start typing your email content here..."
                 />
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', px: 1, pb: 1 }}>
+                  Note: The editor will generate HTML code that will be used in the email template.
+                </Typography>
               </Box>
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                Note: The editor will generate HTML code that will be used in the email template.
-              </Typography>
               {formErrors.content && (
                 <Typography color="error" variant="caption" sx={{ mt: 1 }}>
                   {formErrors.content}
