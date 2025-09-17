@@ -3,7 +3,7 @@ import Iconify from 'src/components/iconify';
 import PostCard from '../post-card';
 import PostSort from '../post-sort';
 import PostSearch from '../post-search';
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect, useRef } from 'react';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
@@ -18,6 +18,7 @@ import Snackbar from '@mui/material/Snackbar';
 import { Alert } from '@mui/material';
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
+
 
 import { posts } from 'src/_mock/blog';
 import axiosInstance from 'src/api/axiosInstance';
@@ -50,6 +51,8 @@ export default function TestimonialView() {
   const [videoError, setVideoError] = useState('');
 
 
+  const videoRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
 
 
@@ -182,7 +185,7 @@ export default function TestimonialView() {
     formData.append('description', description);
     formData.append('location', location);
     if (image) {
-      formData.append('file', image);
+      formData.append('image', image);
     }
 
     try {
@@ -335,7 +338,7 @@ export default function TestimonialView() {
                     },
                   }}
                 />
-
+                {/* 
                 {imagePreview && (
                   <Box sx={{
                     display: 'flex',
@@ -352,7 +355,61 @@ export default function TestimonialView() {
                       Your browser does not support the video tag.
                     </video>
                   </Box>
+                )} */}
+                {imagePreview && (
+                  <Box sx={{
+                    position: 'relative',
+                    width: 320,
+                    height: 180,
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: 'background.default',
+                  }}>
+                    <video
+                      key={imagePreview}  // <-- add this line
+                      ref={videoRef}
+                      width="320"
+                      height="180"
+                      style={{ borderRadius: 6 }}
+                      onClick={() => {
+                        if (videoRef.current.paused) {
+                          videoRef.current.play();
+                          setIsPlaying(true);
+                        } else {
+                          videoRef.current.pause();
+                          setIsPlaying(false);
+                        }
+                      }}
+                    >
+                      <source src={imagePreview} type={image?.type || 'video/mp4'} />
+                      Your browser does not support the video tag.
+                    </video>
+
+
+                    {!isPlaying && (
+                      <Box
+                        onClick={() => { videoRef.current.play(); setIsPlaying(true); }}
+                        sx={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          bgcolor: 'rgba(0,0,0,0.3)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <Iconify icon="eva:play-circle-fill" width={60} height={60} color="#fff" />
+                      </Box>
+                    )}
+                  </Box>
                 )}
+
 
                 <Stack direction="row" spacing={2} alignItems="center" justifyContent="flex-start">
                   <Button
