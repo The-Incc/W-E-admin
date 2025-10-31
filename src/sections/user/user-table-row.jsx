@@ -20,6 +20,7 @@ import Iconify from 'src/components/iconify';
 import axiosInstance from 'src/api/axiosInstance';
 import AuthContext from 'src/context/AuthContext';
 import { useContext } from 'react';
+import { fDateTime } from 'src/utils/format-time';
 
 // ----------------------------------------------------------------------
 
@@ -584,6 +585,52 @@ export default function UserTableRow({
                     </Box>
                   </Stack>
                 </Grid>
+                {(userData.createdAt || userData.created_at || userData.created_date) && (
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Stack spacing={0.5}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                        Created Date
+                      </Typography>
+                      <Box
+                        sx={{
+                          backgroundColor: '#f5f5f5',
+                          borderRadius: '8px',
+                          padding: '10px 14px',
+                          minHeight: '40px',
+                          display: 'flex',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <Typography variant="body2">
+                          {fDateTime(userData.createdAt || userData.created_at || userData.created_date) || 'N/A'}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Grid>
+                )}
+                {(userData.updatedAt || userData.updated_at || userData.updated_date) && (
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Stack spacing={0.5}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                        Updated Date
+                      </Typography>
+                      <Box
+                        sx={{
+                          backgroundColor: '#f5f5f5',
+                          borderRadius: '8px',
+                          padding: '10px 14px',
+                          minHeight: '40px',
+                          display: 'flex',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <Typography variant="body2">
+                          {fDateTime(userData.updatedAt || userData.updated_at || userData.updated_date) || 'N/A'}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Grid>
+                )}
               </Grid>
             </Box>
           )}
