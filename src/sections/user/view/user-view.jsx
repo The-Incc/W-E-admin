@@ -43,27 +43,107 @@ function convertToCsvValue(value) {
   return stringValue;
 }
 
-function exportUsersToCSV(users) {
-  const headers = ['ID', 'Full Name', 'Email', 'Phone', 'Role', 'Status'];
-  const rows = users.map((u) => [
-    convertToCsvValue(u.id),
-    convertToCsvValue(u.fullName),
-    convertToCsvValue(u.email),
-    convertToCsvValue(u.phone),
-    convertToCsvValue(u.role),
-    convertToCsvValue(u.status),
-  ]);
+async function exportUsersToCSV(users, setSnackbarMessage, setSeverity, setSnackBarOpen, setIsSubmitting) {
+  try {
+    setIsSubmitting(true);
+    
+    // Define headers including calculator results
+    const headers = [
+      'ID', 
+      'Full Name', 
+      'Email', 
+      'Phone', 
+      'Role', 
+      'Status',
+      'Gender',
+      'State',
+      'Zipcode',
+      'Age',
+      'Annual Income',
+      'Percent to Provide',
+      'Years to Provide',
+      'Income Replacement',
+      'Debt Elimination',
+      'Childcare',
+      'Extended Healthcare',
+      'Education Fund',
+      'Emergency Fund',
+      'Final Expenses',
+      'Life Insurance',
+      'Type of Insurance',
+      'Personal or Employer'
+    ];
 
-  const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.setAttribute('download', 'users.csv');
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+    // Fetch calculator results for all users
+    const usersWithResults = await Promise.all(
+      users.map(async (user) => {
+        let calculatorData = null;
+        try {
+          const response = await axiosInstance.get(`/calculate/results/${user.id}`);
+          if (response.data && response.data.results && response.data.results.length > 0) {
+            calculatorData = response.data.results[0];
+          } else if (response.data && !response.data.results) {
+            calculatorData = response.data;
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch calculator results for user ${user.id}:`, error);
+          // Continue with null calculator data
+        }
+
+        // Build row data
+        const row = [
+          convertToCsvValue(user.id),
+          convertToCsvValue(user.fullName),
+          convertToCsvValue(user.email),
+          convertToCsvValue(user.phone),
+          convertToCsvValue(user.role),
+          convertToCsvValue(user.status || user.isActive !== undefined ? (user.isActive ? 'Active' : 'Inactive') : ''),
+          convertToCsvValue(user.gender || calculatorData?.gender || ''),
+          convertToCsvValue(user.state || calculatorData?.state || ''),
+          convertToCsvValue(user.zipcode || calculatorData?.zipcode || ''),
+          convertToCsvValue(calculatorData?.age || ''),
+          convertToCsvValue(calculatorData?.annualIncome || calculatorData?.annual_income || ''),
+          convertToCsvValue(calculatorData?.percentToProvide || calculatorData?.percent_to_provide || ''),
+          convertToCsvValue(calculatorData?.yearsToProvide || calculatorData?.years_to_provide || ''),
+          convertToCsvValue(calculatorData?.incomeReplacement || calculatorData?.income_replacement || ''),
+          convertToCsvValue(calculatorData?.debtElimination || calculatorData?.debt_elimination || calculatorData?.eliminateDebt || calculatorData?.eliminate_debt || ''),
+          convertToCsvValue(calculatorData?.childcare || ''),
+          convertToCsvValue(calculatorData?.extendedHealthcare || calculatorData?.extended_healthcare || ''),
+          convertToCsvValue(calculatorData?.educationFund || calculatorData?.education_fund || ''),
+          convertToCsvValue(calculatorData?.emergencyFund || calculatorData?.emergency_fund || ''),
+          convertToCsvValue(calculatorData?.finalExpense || calculatorData?.finalExpenses || calculatorData?.final_expense || calculatorData?.final_expenses || ''),
+          convertToCsvValue(calculatorData?.lifeInsurance || calculatorData?.life_insurance || ''),
+          convertToCsvValue(calculatorData?.typeOfInsurance || calculatorData?.type_of_insurance || ''),
+          convertToCsvValue(calculatorData?.personalOrEmployer || calculatorData?.personal_or_employer || ''),
+        ];
+
+        return row;
+      })
+    );
+
+    // Create CSV content
+    const csv = [headers.join(','), ...usersWithResults.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'users_with_calculator_results.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    setSnackbarMessage('Users exported successfully with calculator results');
+    setSeverity('success');
+    setSnackBarOpen(true);
+  } catch (error) {
+    console.error('Error exporting users:', error);
+    setSnackbarMessage('Error exporting users. Please try again.');
+    setSeverity('error');
+    setSnackBarOpen(true);
+  } finally {
+    setIsSubmitting(false);
+  }
 }
 
 export default function UserPage() {
@@ -353,8 +433,13 @@ export default function UserPage() {
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
         <Typography variant="h4">Users</Typography>
         <Stack direction="row" spacing={2}>
-          <Button variant="outlined" color="primary" onClick={() => exportUsersToCSV(users)}>
-            Export CSV
+          <Button 
+            variant="outlined" 
+            color="primary" 
+            onClick={() => exportUsersToCSV(users, setSnackbarMessage, setSeverity, setSnackBarOpen, setIsSubmitting)}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Exporting...' : 'Export CSV'}
           </Button>
           <Button variant="contained" color="inherit" onClick={handleOpenModal} startIcon={<Iconify icon="eva:plus-fill" />}>
             New User

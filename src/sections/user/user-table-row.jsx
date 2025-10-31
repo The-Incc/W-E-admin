@@ -14,6 +14,7 @@ import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
+import Grid from '@mui/material/Grid';
 
 import Iconify from 'src/components/iconify';
 import axiosInstance from 'src/api/axiosInstance';
@@ -27,7 +28,10 @@ const style = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 600,
+  width: 900,
+  maxWidth: '90vw',
+  maxHeight: '90vh',
+  overflow: 'auto',
   bgcolor: 'background.paper',
   boxShadow: 24,
   p: 4,
@@ -49,7 +53,7 @@ export default function UserTableRow({
 
 
 
-  const [userData, setUserData] = useState([]);
+  const [userData, setUserData] = useState(null);
 
   const { token } = useContext(AuthContext); // Access login method from AuthContext
 
@@ -86,18 +90,33 @@ export default function UserTableRow({
   }
 
   useEffect(() => {
-    const fetchResultsById = async (id) => {
+    const fetchResultsById = async (userId) => {
+      if (!userId) return;
+      
       try {
-        const response = await axiosInstance.get(`calculate/results/${id}`);
-        setUserData(response.data.results[0]);
-        console.log(response.data.results); // Handle the response data here
+        const response = await axiosInstance.get(`calculate/results/${userId}`);
+        console.log('API Response:', response.data);
+        
+        // Handle different response structures
+        if (response.data && response.data.results && response.data.results.length > 0) {
+          setUserData(response.data.results[0]);
+        } else if (response.data && !response.data.results) {
+          // If results is not an array, use the data directly
+          setUserData(response.data);
+        } else {
+          console.warn('No results data found in response');
+          setUserData(null);
+        }
       } catch (error) {
         console.error('Error fetching results:', error);
+        setUserData(null);
       }
     };
 
-    fetchResultsById(id)
-  }, [])
+    if (id) {
+      fetchResultsById(id);
+    }
+  }, [id])
 
   console.log(openDeleteModal)
 
@@ -161,76 +180,413 @@ export default function UserTableRow({
             </Typography>
           </Stack>
 
-          <Box mt={3}>
-            <span style={{ fontWeight: 600, fontSize: 18 }}>Personal Information:</span>
+          <Box mt={3} mb={2}>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+              Personal Information
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6} md={4}>
+                <Stack spacing={0.5}>
+                  <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                    Email
+                  </Typography>
+                  <Box
+                    sx={{
+                      backgroundColor: '#f5f5f5',
+                      borderRadius: '8px',
+                      padding: '10px 14px',
+                      minHeight: '40px',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Typography variant="body2">{email || 'N/A'}</Typography>
+                  </Box>
+                </Stack>
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <Stack spacing={0.5}>
+                  <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                    Phone Number
+                  </Typography>
+                  <Box
+                    sx={{
+                      backgroundColor: '#f5f5f5',
+                      borderRadius: '8px',
+                      padding: '10px 14px',
+                      minHeight: '40px',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Typography variant="body2">{phone || 'N/A'}</Typography>
+                  </Box>
+                </Stack>
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <Stack spacing={0.5}>
+                  <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                    Gender
+                  </Typography>
+                  <Box
+                    sx={{
+                      backgroundColor: '#f5f5f5',
+                      borderRadius: '8px',
+                      padding: '10px 14px',
+                      minHeight: '40px',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Typography variant="body2">{gender || 'N/A'}</Typography>
+                  </Box>
+                </Stack>
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <Stack spacing={0.5}>
+                  <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                    State
+                  </Typography>
+                  <Box
+                    sx={{
+                      backgroundColor: '#f5f5f5',
+                      borderRadius: '8px',
+                      padding: '10px 14px',
+                      minHeight: '40px',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Typography variant="body2">{state || 'N/A'}</Typography>
+                  </Box>
+                </Stack>
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <Stack spacing={0.5}>
+                  <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                    Zipcode
+                  </Typography>
+                  <Box
+                    sx={{
+                      backgroundColor: '#f5f5f5',
+                      borderRadius: '8px',
+                      padding: '10px 14px',
+                      minHeight: '40px',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Typography variant="body2">{zipcode || 'N/A'}</Typography>
+                  </Box>
+                </Stack>
+              </Grid>
+              {userData && userData.age && (
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                      Age
+                    </Typography>
+                    <Box
+                      sx={{
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        minHeight: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography variant="body2">{userData.age}</Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+              )}
+            </Grid>
           </Box>
-          <Box direction="row" spacing={4} sx={{ display: 'inline-flex', flexWrap: 'wrap' }}>
-            <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Email</span>
-              <p
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  display: 'inline-block',
-                }}
-              >
-                {email}
-              </p>
-            </Stack>
-            <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Phone Number</span>
-              <p
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  display: 'inline-block',
-                }}
-              >
-                {phone ? phone : 'N/A'}
-              </p>
-            </Stack>
-            <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Gender</span>
-              <p
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  display: 'inline-block',
-                }}
-              >
-                {gender}
-              </p>
-            </Stack>
-            <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>State</span>
-              <p
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  display: 'inline-block',
-                }}
-              >
-                {state}
-              </p>
-            </Stack>
-            <Stack spacing={1} mt={2} sx={{ marginRight: 2, marginBottom: 2 }}>
-              <span style={{ marginRight: '8px', fontWeight: 600 }}>Zipcode</span>
-              <p
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  display: 'inline-block',
-                }}
-              >
-                {zipcode}
-              </p>
-            </Stack>
-          </Box>
+
+          {/* Calculator Results Section */}
+          {userData && (
+            <Box mt={4}>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                Calculator Results
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                      Income Replacement
+                    </Typography>
+                    <Box
+                      sx={{
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        minHeight: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography variant="body2">
+                        ${(userData.incomeReplacement || userData.income_replacement || 0).toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                      Debt Elimination
+                    </Typography>
+                    <Box
+                      sx={{
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        minHeight: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography variant="body2">
+                        ${parseInt(userData.debtElimination || userData.debt_elimination || userData.eliminateDebt || userData.eliminate_debt || 0, 10).toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                      Childcare
+                    </Typography>
+                    <Box
+                      sx={{
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        minHeight: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography variant="body2">
+                        ${parseInt(userData.childcare || 0, 10).toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                      Extended Healthcare
+                    </Typography>
+                    <Box
+                      sx={{
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        minHeight: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography variant="body2">
+                        ${(userData.extendedHealthcare || userData.extended_healthcare || 0).toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                      Education Fund
+                    </Typography>
+                    <Box
+                      sx={{
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        minHeight: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography variant="body2">
+                        ${(userData.educationFund || userData.education_fund || 0).toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                      Emergency Fund
+                    </Typography>
+                    <Box
+                      sx={{
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        minHeight: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography variant="body2">
+                        ${(userData.emergencyFund || userData.emergency_fund || 0).toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                      Final Expenses
+                    </Typography>
+                    <Box
+                      sx={{
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        minHeight: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography variant="body2">
+                        ${parseInt(userData.finalExpense || userData.finalExpenses || userData.final_expense || userData.final_expenses || 0, 10).toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                      Life Insurance
+                    </Typography>
+                    <Box
+                      sx={{
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        minHeight: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography variant="body2">
+                        ${parseInt(userData.lifeInsurance || userData.life_insurance || 0, 10).toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                      Annual Income
+                    </Typography>
+                    <Box
+                      sx={{
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        minHeight: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography variant="body2">
+                        ${parseInt(userData.annualIncome || userData.annual_income || 0, 10).toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                      Percent to Provide
+                    </Typography>
+                    <Box
+                      sx={{
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        minHeight: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography variant="body2">
+                        {userData.percentToProvide || userData.percent_to_provide || 'N/A'}%
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                      Years to Provide
+                    </Typography>
+                    <Box
+                      sx={{
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        minHeight: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography variant="body2">
+                        {userData.yearsToProvide || userData.years_to_provide || 'N/A'}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                      Type of Insurance
+                    </Typography>
+                    <Box
+                      sx={{
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        minHeight: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography variant="body2">
+                        {userData.typeOfInsurance || userData.type_of_insurance || 'N/A'}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                      Personal or Employer
+                    </Typography>
+                    <Box
+                      sx={{
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        minHeight: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography variant="body2">
+                        {userData.personalOrEmployer || userData.personal_or_employer || 'N/A'}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+              </Grid>
+            </Box>
+          )}
         </Box>
       </Modal>
 
