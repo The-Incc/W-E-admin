@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 <<<<<<<< HEAD:dist/assets/logo-f50466eb.js
 import{r as l,n as m,j as t,B as x,$ as c,P as s}from"./index-18523639.js";import{L as d}from"./Link-ad60fb88.js";const r=l.forwardRef(({disabledLink:a=!1,sx:i,...n},p)=>{const e=m();e.palette.primary.light,e.palette.primary.main,e.palette.primary.dark;const o=t.jsx(x,{ref:p,component:"div",sx:{width:40,height:40,display:"inline-flex",...i},...n});return a?o:t.jsx(d,{component:c,href:"/",sx:{display:"contents"},children:o})});r.propTypes={disabledLink:s.bool,sx:s.object};const y=r;export{y as L};
 ========
 import{r as l,n as m,j as t,B as x,$ as c,P as s}from"./index-402c1dce.js";import{L as d}from"./Link-84d220a9.js";const r=l.forwardRef(({disabledLink:a=!1,sx:i,...n},p)=>{const e=m();e.palette.primary.light,e.palette.primary.main,e.palette.primary.dark;const o=t.jsx(x,{ref:p,component:"div",sx:{width:40,height:40,display:"inline-flex",...i},...n});return a?o:t.jsx(d,{component:c,href:"/",sx:{display:"contents"},children:o})});r.propTypes={disabledLink:s.bool,sx:s.object};const y=r;export{y as L};
 >>>>>>>> origin/main:dist/assets/logo-01b31be9.js
+=======
+import{r as l,n as m,j as t,B as x,$ as c,P as s}from"./index-402c1dce.js";import{L as d}from"./Link-84d220a9.js";const r=l.forwardRef(({disabledLink:a=!1,sx:i,...n},p)=>{const e=m();e.palette.primary.light,e.palette.primary.main,e.palette.primary.dark;const o=t.jsx(x,{ref:p,component:"div",sx:{width:40,height:40,display:"inline-flex",...i},...n});return a?o:t.jsx(d,{component:c,href:"/",sx:{display:"contents"},children:o})});r.propTypes={disabledLink:s.bool,sx:s.object};const y=r;export{y as L};
+>>>>>>> origin/main
