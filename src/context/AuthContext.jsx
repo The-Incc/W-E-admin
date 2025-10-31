@@ -45,6 +45,7 @@ export const AuthProvider = ({ children }) => {
     const response = await axiosInstance.post('/auth/login', credentials);
     localStorage.setItem('token', response.data.token);
     localStorage.setItem('user', JSON.stringify(response.data.user));
+
     setToken(response.data.token);
     setUser(response.data.user);
   };

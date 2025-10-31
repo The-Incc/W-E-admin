@@ -165,11 +165,13 @@ export default function UserPage() {
     setOpenModal(false);
   };
 
-  const [order, setOrder] = useState('asc');
+  // const [order, setOrder] = useState('asc');
+  const [order, setOrder] = useState('desc');
 
   const [selected, setSelected] = useState([]);
 
-  const [orderBy, setOrderBy] = useState('fullName');
+  // const [orderBy, setOrderBy] = useState('fullName');
+  const [orderBy, setOrderBy] = useState('createdAt');
 
   const [filterName, setFilterName] = useState('');
 
@@ -202,8 +204,12 @@ export default function UserPage() {
     const fetchUsers = async () => {
       try {
         const response = await axiosInstance.get('/user/getUsers');
+
         console.log(response);
-        setUsers(response.data.users);
+        // setUsers(response.data.users);
+        setUsers(
+          response.data.users.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        );
       } catch (error) {
         console.log("Error fetching users", error);
       }
@@ -306,6 +312,13 @@ export default function UserPage() {
     setFormZipcode('');
     setFormFile(null);
     setImagePreview(null);
+    // Reset previous error messages
+    setFullNameError('');
+    setEmailError('');
+    setPhoneError('');
+    setPasswordError('');
+    setStateError('');
+    setZipcodeError('');
     setOpenModal(true);
   };
 
@@ -413,7 +426,8 @@ export default function UserPage() {
           setSeverity('success');
           setSnackBarOpen(true);
           const newUser = response.data.user;
-          setUsers((prev) => [...prev, newUser]);
+          setUsers((prev) => [newUser, ...prev]);
+          // setUsers((prev) => [...prev, newUser]);
         }
       }
     } catch (error) {
@@ -430,6 +444,7 @@ export default function UserPage() {
 
   return (
     <Container>
+
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
         <Typography variant="h4">Users</Typography>
         <Stack direction="row" spacing={2}>
@@ -481,7 +496,7 @@ export default function UserPage() {
                     return (
                       <UserTableRow
                         key={row?.id}
-                        row={row}   
+                        row={row}
                         selected={selected.indexOf(row?.fullName) !== -1}
                         handleClick={(event) => handleClick(event, row?.fullName)}
                         onEdit={handleEditUser}

@@ -53,10 +53,10 @@ export default function SubscriptionView() {
 
   const filteredSubscriptions = filter
     ? subscriptions.filter(sub =>
-        sub.email.toLowerCase().includes(filter.toLowerCase()) ||
-        sub.firstName.toLowerCase().includes(filter.toLowerCase()) ||
-        sub.lastName.toLowerCase().includes(filter.toLowerCase())
-      )
+      sub.email.toLowerCase().includes(filter.toLowerCase()) ||
+      sub.firstName.toLowerCase().includes(filter.toLowerCase()) ||
+      sub.lastName.toLowerCase().includes(filter.toLowerCase())
+    )
     : subscriptions;
 
   return (
@@ -74,7 +74,10 @@ export default function SubscriptionView() {
             size="small"
             placeholder="Search by name or email"
             value={filter}
-            onChange={e => setFilter(e.target.value)}
+            onChange={e => {
+              setFilter(e.target.value);
+              setPage(0);
+            }}
             sx={{ width: 300 }}
           />
         </Stack>
