@@ -43,35 +43,46 @@ function convertToCsvValue(value) {
   return stringValue;
 }
 
+function formatDollar(value) {
+  if (value === undefined || value === null || value === '') return '';
+  const num = typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]/g, '')) : Number(value);
+  if (Number.isNaN(num)) return '';
+  return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 async function exportUsersToCSV(users, setSnackbarMessage, setSeverity, setSnackBarOpen, setIsSubmitting) {
   try {
     setIsSubmitting(true);
     
-    // Define headers including calculator results
+    // Define headers: First/Last, Date Completed, Yrs to Retire, Income Provide, PWP, Need, Gap; no Percent to Provide, Income Replacement, Extended Healthcare
     const headers = [
-      'ID', 
-      'Full Name', 
-      'Email', 
-      'Phone', 
-      'Role', 
+      'ID',
+      'First',
+      'Last',
+      'Email',
+      'Phone',
+      'Role',
       'Status',
       'Gender',
       'State',
       'Zipcode',
       'Age',
       'Annual Income',
-      'Percent to Provide',
       'Years to Provide',
-      'Income Replacement',
       'Debt Elimination',
       'Childcare',
-      'Extended Healthcare',
       'Education Fund',
       'Emergency Fund',
       'Final Expenses',
       'Life Insurance',
       'Type of Insurance',
-      'Personal or Employer'
+      'Personal or Employer',
+      'Date Completed',
+      'Yrs to Retire',
+      'Income Provide',
+      'PWP',
+      'Need',
+      'Gap',
     ];
 
     // Fetch calculator results for all users
@@ -90,10 +101,20 @@ async function exportUsersToCSV(users, setSnackbarMessage, setSeverity, setSnack
           // Continue with null calculator data
         }
 
-        // Build row data
+        // Build row data: First/Last from result or split fullName; dollar format for L,N,R,S,U,V,AA,AB,AC
+        const first = calculatorData?.firstName ?? (user.fullName || '').trim().split(/\s+/)[0] ?? '';
+        const last = calculatorData?.lastName ?? (user.fullName || '').trim().split(/\s+/).slice(1).join(' ') ?? '';
+        const educationFundVal = calculatorData?.children && Array.isArray(calculatorData.children)
+          ? calculatorData.children.reduce((s, c) => s + (parseFloat(String(c?.amount || 0).replace(/[^0-9.-]/g, '')) || 0), 0)
+          : (calculatorData?.educationFund ?? calculatorData?.education_fund ?? '');
+        const dateCompleted = calculatorData?.dateCompleted
+          ? (new Date(calculatorData.dateCompleted).toISOString().split('T')[0])
+          : '';
+
         const row = [
           convertToCsvValue(user.id),
-          convertToCsvValue(user.fullName),
+          convertToCsvValue(first),
+          convertToCsvValue(last),
           convertToCsvValue(user.email),
           convertToCsvValue(user.phone),
           convertToCsvValue(user.role),
@@ -102,19 +123,22 @@ async function exportUsersToCSV(users, setSnackbarMessage, setSeverity, setSnack
           convertToCsvValue(user.state || calculatorData?.state || ''),
           convertToCsvValue(user.zipcode || calculatorData?.zipcode || ''),
           convertToCsvValue(calculatorData?.age || ''),
-          convertToCsvValue(calculatorData?.annualIncome || calculatorData?.annual_income || ''),
-          convertToCsvValue(calculatorData?.percentToProvide || calculatorData?.percent_to_provide || ''),
-          convertToCsvValue(calculatorData?.yearsToProvide || calculatorData?.years_to_provide || ''),
-          convertToCsvValue(calculatorData?.incomeReplacement || calculatorData?.income_replacement || ''),
-          convertToCsvValue(calculatorData?.debtElimination || calculatorData?.debt_elimination || calculatorData?.eliminateDebt || calculatorData?.eliminate_debt || ''),
-          convertToCsvValue(calculatorData?.childcare || ''),
-          convertToCsvValue(calculatorData?.extendedHealthcare || calculatorData?.extended_healthcare || ''),
-          convertToCsvValue(calculatorData?.educationFund || calculatorData?.education_fund || ''),
-          convertToCsvValue(calculatorData?.emergencyFund || calculatorData?.emergency_fund || ''),
-          convertToCsvValue(calculatorData?.finalExpense || calculatorData?.finalExpenses || calculatorData?.final_expense || calculatorData?.final_expenses || ''),
-          convertToCsvValue(calculatorData?.lifeInsurance || calculatorData?.life_insurance || ''),
+          convertToCsvValue(calculatorData?.annualIncome != null ? formatDollar(calculatorData.annualIncome) : (calculatorData?.annual_income != null ? formatDollar(calculatorData.annual_income) : '')),
+          convertToCsvValue(calculatorData?.yearsToProvide ?? calculatorData?.years_to_provide ?? ''),
+          convertToCsvValue(calculatorData?.eliminateDebt != null ? formatDollar(calculatorData.eliminateDebt) : (calculatorData?.debtElimination != null ? formatDollar(calculatorData.debtElimination) : '')),
+          convertToCsvValue(calculatorData?.childcare != null ? formatDollar(calculatorData.childcare) : ''),
+          convertToCsvValue(educationFundVal !== '' ? formatDollar(educationFundVal) : ''),
+          convertToCsvValue(calculatorData?.emergencyFund != null ? formatDollar(calculatorData.emergencyFund) : (calculatorData?.emergency_fund != null ? formatDollar(calculatorData.emergency_fund) : '')),
+          convertToCsvValue(calculatorData?.finalExpense != null ? formatDollar(calculatorData.finalExpense) : (calculatorData?.finalExpenses != null ? formatDollar(calculatorData.finalExpenses) : '')),
+          convertToCsvValue(calculatorData?.lifeInsurance != null ? formatDollar(calculatorData.lifeInsurance) : (calculatorData?.life_insurance != null ? formatDollar(calculatorData.life_insurance) : '')),
           convertToCsvValue(calculatorData?.typeOfInsurance || calculatorData?.type_of_insurance || ''),
-          convertToCsvValue(calculatorData?.personalOrEmployer || calculatorData?.personal_or_employer || ''),
+          convertToCsvValue(calculatorData?.personalOrEmployer || calculatorData?.personal_or_employer || calculatorData?.insuranceProvider || ''),
+          convertToCsvValue(dateCompleted),
+          convertToCsvValue(calculatorData?.yearsToRetire ?? ''),
+          convertToCsvValue(calculatorData?.annualIncomeToProvide != null ? formatDollar(calculatorData.annualIncomeToProvide) : (calculatorData?.annual_income_to_provide != null ? formatDollar(calculatorData.annual_income_to_provide) : '')),
+          convertToCsvValue(calculatorData?.pwp != null ? formatDollar(calculatorData.pwp) : ''),
+          convertToCsvValue(calculatorData?.need != null ? formatDollar(calculatorData.need) : ''),
+          convertToCsvValue(calculatorData?.gap != null ? formatDollar(calculatorData.gap) : ''),
         ];
 
         return row;
@@ -139,6 +163,36 @@ async function exportUsersToCSV(users, setSnackbarMessage, setSeverity, setSnack
   } catch (error) {
     console.error('Error exporting users:', error);
     setSnackbarMessage('Error exporting users. Please try again.');
+    setSeverity('error');
+    setSnackBarOpen(true);
+  } finally {
+    setIsSubmitting(false);
+  }
+}
+
+/** Export all calculator sessions (one row per session, includes duplicates). */
+async function exportAllSessionsCSV(setSnackbarMessage, setSeverity, setSnackBarOpen, setIsSubmitting) {
+  try {
+    setIsSubmitting(true);
+    const response = await axiosInstance.get('/admin/export-calculator-results', {
+      params: { format: 'csv' },
+      responseType: 'text',
+    });
+    const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'calculator-results-all-sessions.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setSnackbarMessage('All calculator sessions exported (including duplicates).');
+    setSeverity('success');
+    setSnackBarOpen(true);
+  } catch (error) {
+    console.error('Error exporting all sessions:', error);
+    setSnackbarMessage(error?.response?.data?.error || 'Error exporting sessions. Please try again.');
     setSeverity('error');
     setSnackBarOpen(true);
   } finally {
@@ -455,6 +509,14 @@ export default function UserPage() {
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Exporting...' : 'Export CSV'}
+          </Button>
+          <Button 
+            variant="outlined" 
+            color="secondary" 
+            onClick={() => exportAllSessionsCSV(setSnackbarMessage, setSeverity, setSnackBarOpen, setIsSubmitting)}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Exporting...' : 'Export all sessions (CSV)'}
           </Button>
           <Button variant="contained" color="inherit" onClick={handleOpenModal} startIcon={<Iconify icon="eva:plus-fill" />}>
             New User
