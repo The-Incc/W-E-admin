@@ -321,53 +321,11 @@ export default function UserTableRow({
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6} md={4}>
                   <Stack spacing={0.5}>
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                      Date Completed
-                    </Typography>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Date Completed</Typography>
                     <Box sx={{ backgroundColor: '#f5f5f5', borderRadius: '8px', padding: '10px 14px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
                       <Typography variant="body2">
                         {userData.dateCompleted ? (new Date(userData.dateCompleted).toLocaleDateString()) : (fDateTime(userData.createdAt || userData.created_at) || 'N/A')}
                       </Typography>
-                    </Box>
-                  </Stack>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Stack spacing={0.5}>
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Yrs to Retire</Typography>
-                    <Box sx={{ backgroundColor: '#f5f5f5', borderRadius: '8px', padding: '10px 14px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
-                      <Typography variant="body2">{userData.yearsToRetire ?? userData.years_to_retire ?? userData.yearsToProvide ?? userData.years_to_provide ?? 'N/A'}</Typography>
-                    </Box>
-                  </Stack>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Stack spacing={0.5}>
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Income Provide</Typography>
-                    <Box sx={{ backgroundColor: '#f5f5f5', borderRadius: '8px', padding: '10px 14px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
-                      <Typography variant="body2">${formatDollar(userData.annualIncomeToProvide || userData.annual_income_to_provide)}</Typography>
-                    </Box>
-                  </Stack>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Stack spacing={0.5}>
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>PWP</Typography>
-                    <Box sx={{ backgroundColor: '#f5f5f5', borderRadius: '8px', padding: '10px 14px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
-                      <Typography variant="body2">${formatDollar(userData.pwp)}</Typography>
-                    </Box>
-                  </Stack>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Stack spacing={0.5}>
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Need</Typography>
-                    <Box sx={{ backgroundColor: '#f5f5f5', borderRadius: '8px', padding: '10px 14px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
-                      <Typography variant="body2">${formatDollar(userData.need)}</Typography>
-                    </Box>
-                  </Stack>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Stack spacing={0.5}>
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Gap</Typography>
-                    <Box sx={{ backgroundColor: '#f5f5f5', borderRadius: '8px', padding: '10px 14px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
-                      <Typography variant="body2">${formatDollar(userData.gap)}</Typography>
                     </Box>
                   </Stack>
                 </Grid>
@@ -381,9 +339,65 @@ export default function UserTableRow({
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                   <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Yrs to Retire</Typography>
+                    <Box sx={{ backgroundColor: '#f5f5f5', borderRadius: '8px', padding: '10px 14px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
+                      <Typography variant="body2">{userData.yearsToRetire ?? userData.years_to_retire ?? userData.yearsToProvide ?? userData.years_to_provide ?? 'N/A'}</Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>PWP</Typography>
+                    <Box sx={{ backgroundColor: '#f5f5f5', borderRadius: '8px', padding: '10px 14px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
+                      <Typography variant="body2">${formatDollar(userData.pwp)}</Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Coverage Need</Typography>
+                    <Box sx={{ backgroundColor: '#f5f5f5', borderRadius: '8px', padding: '10px 14px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
+                      <Typography variant="body2">${formatDollar(userData.need)}</Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Coverage Gap</Typography>
+                    <Box sx={{ backgroundColor: '#f5f5f5', borderRadius: '8px', padding: '10px 14px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
+                      <Typography variant="body2">${formatDollar(userData.gap)}</Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Income Provide</Typography>
+                    <Box sx={{ backgroundColor: '#f5f5f5', borderRadius: '8px', padding: '10px 14px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
+                      <Typography variant="body2">${formatDollar(userData.annualIncomeToProvide || userData.annual_income_to_provide)}</Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
                     <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Years to Provide</Typography>
                     <Box sx={{ backgroundColor: '#f5f5f5', borderRadius: '8px', padding: '10px 14px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
-                      <Typography variant="body2">{userData.yearsToProvide ?? userData.years_to_provide ?? 'N/A'}</Typography>
+                      <Typography variant="body2">{userData.yearsIncomeToProvide ?? userData.years_income_to_provide ?? userData.yearsToProvide ?? userData.years_to_provide ?? 'N/A'}</Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Income Replacement</Typography>
+                    <Box sx={{ backgroundColor: '#f5f5f5', borderRadius: '8px', padding: '10px 14px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
+                      <Typography variant="body2">
+                        ${formatDollar(
+                          (userData.annualIncomeToProvide != null && userData.yearsIncomeToProvide != null)
+                            ? parseFloat(String(userData.annualIncomeToProvide).replace(/[^0-9.-]/g, '')) * parseFloat(String(userData.yearsIncomeToProvide).replace(/[^0-9.-]/g, ''))
+                            : (userData.annual_income_to_provide != null && userData.years_income_to_provide != null)
+                              ? parseFloat(String(userData.annual_income_to_provide).replace(/[^0-9.-]/g, '')) * parseFloat(String(userData.years_income_to_provide).replace(/[^0-9.-]/g, ''))
+                              : ''
+                        )}
+                      </Typography>
                     </Box>
                   </Stack>
                 </Grid>
@@ -445,32 +459,20 @@ export default function UserTableRow({
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                   <Stack spacing={0.5}>
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Personal or Employer</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Permanent or Employer</Typography>
                     <Box sx={{ backgroundColor: '#f5f5f5', borderRadius: '8px', padding: '10px 14px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
                       <Typography variant="body2">{userData.personalOrEmployer || userData.personal_or_employer || userData.insuranceProvider || 'N/A'}</Typography>
                     </Box>
                   </Stack>
                 </Grid>
-                {(userData.createdAt || userData.created_at) && (
-                  <Grid item xs={12} sm={6} md={4}>
-                    <Stack spacing={0.5}>
-                      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Created Date</Typography>
-                      <Box sx={{ backgroundColor: '#f5f5f5', borderRadius: '8px', padding: '10px 14px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
-                        <Typography variant="body2">{fDateTime(userData.createdAt || userData.created_at) || 'N/A'}</Typography>
-                      </Box>
-                    </Stack>
-                  </Grid>
-                )}
-                {(userData.updatedAt || userData.updated_at) && (
-                  <Grid item xs={12} sm={6} md={4}>
-                    <Stack spacing={0.5}>
-                      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Updated Date</Typography>
-                      <Box sx={{ backgroundColor: '#f5f5f5', borderRadius: '8px', padding: '10px 14px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
-                        <Typography variant="body2">{fDateTime(userData.updatedAt || userData.updated_at) || 'N/A'}</Typography>
-                      </Box>
-                    </Stack>
-                  </Grid>
-                )}
+                <Grid item xs={12} sm={6} md={4}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>Updated Date</Typography>
+                    <Box sx={{ backgroundColor: '#f5f5f5', borderRadius: '8px', padding: '10px 14px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
+                      <Typography variant="body2">{fDateTime(userData.updatedAt || userData.updated_at) || 'N/A'}</Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
               </Grid>
             </Box>
           )}

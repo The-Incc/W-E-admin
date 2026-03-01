@@ -54,7 +54,7 @@ async function exportUsersToCSV(users, setSnackbarMessage, setSeverity, setSnack
   try {
     setIsSubmitting(true);
     
-    // Define headers: First/Last, Date Completed, Yrs to Retire, Income Provide, PWP, Need, Gap; no Percent to Provide, Income Replacement, Extended Healthcare
+    // Match admin individual summary order: user fields first, then calculator fields
     const headers = [
       'ID',
       'First',
@@ -67,8 +67,15 @@ async function exportUsersToCSV(users, setSnackbarMessage, setSeverity, setSnack
       'State',
       'Zipcode',
       'Age',
+      'Date Completed',
       'Annual Income',
+      'Yrs to Retire',
+      'PWP',
+      'Coverage Need',
+      'Coverage Gap',
+      'Income Provide',
       'Years to Provide',
+      'Income Replacement',
       'Debt Elimination',
       'Childcare',
       'Education Fund',
@@ -76,13 +83,8 @@ async function exportUsersToCSV(users, setSnackbarMessage, setSeverity, setSnack
       'Final Expenses',
       'Life Insurance',
       'Type of Insurance',
-      'Personal or Employer',
-      'Date Completed',
-      'Yrs to Retire',
-      'Income Provide',
-      'PWP',
-      'Need',
-      'Gap',
+      'Permanent or Employer',
+      'Updated Date',
     ];
 
     // Fetch calculator results for all users
@@ -110,6 +112,14 @@ async function exportUsersToCSV(users, setSnackbarMessage, setSeverity, setSnack
         const dateCompleted = calculatorData?.dateCompleted
           ? (new Date(calculatorData.dateCompleted).toISOString().split('T')[0])
           : '';
+        const incomeReplacementVal = (calculatorData?.annualIncomeToProvide != null && calculatorData?.yearsIncomeToProvide != null)
+          ? parseFloat(String(calculatorData.annualIncomeToProvide).replace(/[^0-9.-]/g, '')) * parseFloat(String(calculatorData.yearsIncomeToProvide).replace(/[^0-9.-]/g, ''))
+          : (calculatorData?.annual_income_to_provide != null && calculatorData?.years_income_to_provide != null)
+            ? parseFloat(String(calculatorData.annual_income_to_provide).replace(/[^0-9.-]/g, '')) * parseFloat(String(calculatorData.years_income_to_provide).replace(/[^0-9.-]/g, ''))
+            : null;
+        const updatedDate = calculatorData?.updatedAt || calculatorData?.updated_at
+          ? (new Date(calculatorData.updatedAt || calculatorData.updated_at).toISOString().split('T')[0])
+          : '';
 
         const row = [
           convertToCsvValue(user.id),
@@ -123,8 +133,15 @@ async function exportUsersToCSV(users, setSnackbarMessage, setSeverity, setSnack
           convertToCsvValue(user.state || calculatorData?.state || ''),
           convertToCsvValue(user.zipcode || calculatorData?.zipcode || ''),
           convertToCsvValue(calculatorData?.age || ''),
+          convertToCsvValue(dateCompleted),
           convertToCsvValue(calculatorData?.annualIncome != null ? formatDollar(calculatorData.annualIncome) : (calculatorData?.annual_income != null ? formatDollar(calculatorData.annual_income) : '')),
-          convertToCsvValue(calculatorData?.yearsToProvide ?? calculatorData?.years_to_provide ?? ''),
+          convertToCsvValue(calculatorData?.yearsToRetire ?? calculatorData?.years_to_retire ?? ''),
+          convertToCsvValue(calculatorData?.pwp != null ? formatDollar(calculatorData.pwp) : ''),
+          convertToCsvValue(calculatorData?.need != null ? formatDollar(calculatorData.need) : ''),
+          convertToCsvValue(calculatorData?.gap != null ? formatDollar(calculatorData.gap) : ''),
+          convertToCsvValue(calculatorData?.annualIncomeToProvide != null ? formatDollar(calculatorData.annualIncomeToProvide) : (calculatorData?.annual_income_to_provide != null ? formatDollar(calculatorData.annual_income_to_provide) : '')),
+          convertToCsvValue(calculatorData?.yearsIncomeToProvide ?? calculatorData?.years_income_to_provide ?? calculatorData?.yearsToProvide ?? calculatorData?.years_to_provide ?? ''),
+          convertToCsvValue(incomeReplacementVal != null ? formatDollar(incomeReplacementVal) : ''),
           convertToCsvValue(calculatorData?.eliminateDebt != null ? formatDollar(calculatorData.eliminateDebt) : (calculatorData?.debtElimination != null ? formatDollar(calculatorData.debtElimination) : '')),
           convertToCsvValue(calculatorData?.childcare != null ? formatDollar(calculatorData.childcare) : ''),
           convertToCsvValue(educationFundVal !== '' ? formatDollar(educationFundVal) : ''),
@@ -133,12 +150,7 @@ async function exportUsersToCSV(users, setSnackbarMessage, setSeverity, setSnack
           convertToCsvValue(calculatorData?.lifeInsurance != null ? formatDollar(calculatorData.lifeInsurance) : (calculatorData?.life_insurance != null ? formatDollar(calculatorData.life_insurance) : '')),
           convertToCsvValue(calculatorData?.typeOfInsurance || calculatorData?.type_of_insurance || ''),
           convertToCsvValue(calculatorData?.personalOrEmployer || calculatorData?.personal_or_employer || calculatorData?.insuranceProvider || ''),
-          convertToCsvValue(dateCompleted),
-          convertToCsvValue(calculatorData?.yearsToRetire ?? ''),
-          convertToCsvValue(calculatorData?.annualIncomeToProvide != null ? formatDollar(calculatorData.annualIncomeToProvide) : (calculatorData?.annual_income_to_provide != null ? formatDollar(calculatorData.annual_income_to_provide) : '')),
-          convertToCsvValue(calculatorData?.pwp != null ? formatDollar(calculatorData.pwp) : ''),
-          convertToCsvValue(calculatorData?.need != null ? formatDollar(calculatorData.need) : ''),
-          convertToCsvValue(calculatorData?.gap != null ? formatDollar(calculatorData.gap) : ''),
+          convertToCsvValue(updatedDate),
         ];
 
         return row;
